@@ -4,18 +4,22 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define BLOCKSIZE 4096
+
 typedef struct {
     char *lyrics;
     size_t size; // total size
-    // save the state that it has reserved memory for a line
-    int reserved_line;
+    char cl_idx; // line index (in the whole file)
+    char cl[BLOCKSIZE]; // current `line`
 } lyrics_t;
 
 lyrics_t *create_lyrics() {
     lyrics_t *lyrics = (lyrics_t *)malloc(sizeof(lyrics_t));
     lyrics->lyrics = NULL;
     lyrics->size = 0;
-    return lyrics ;
+    lyrics->cl_idx = 0;
+    lyrics->cl[0] = '\0';
+    return lyrics;
 }
 
 void free_lyrics(lyrics_t *lyrics) {
@@ -27,8 +31,6 @@ size_t length(const char *line) {
     for (; line && line[len] != '\0'; len++) {}
     return len;
 }
-
-#define BLOCKSIZE 4096
 
 void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
     if (!lyrics) {
@@ -58,6 +60,22 @@ void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
     }
 }
 
+char* next_line(lyrics_t *lyrics) {
+    if (lyrics->cl_idx == lyrics->size)
+        return 0;
+
+    for (size_t i = 0; i < BLOCKSIZE; i++) {
+        lyrics->cl[i] = '\0';
+    }
+
+    for (size_t k = 0, i = lyrics->cl_idx; lyrics->lyrics[i] != '\n'; i++, k++) {
+        lyrics->cl[k] = lyrics->lyrics[i];
+    }
+
+    lyrics->cl_idx += length(lyrics->cl) + 1; // +1 for the '\n'
+    return lyrics->cl;
+}
+
 int center(int text_width, int screen_width) {
     screen_width = screen_width >> 1;
     text_width = screen_width >> 1;
@@ -71,7 +89,21 @@ int main(int argc, char *argv[]) {
     load_lyric_from_file(lyrics, "test.lyric");
     free_lyrics(lyrics);
 
-    printf("Lyrics:\n %s", lyrics->lyrics);
+    //printf("Lyrics:\n %s", lyrics->lyrics);
+
+    char *line;
+    size_t height = 3;
+    while (true) {
+        char *line = next_line(lyrics);
+        if (!line) {
+            break;
+        }
+
+        mvprintw(height, 4, "%s", line);
+        height++;
+    }
+
+    getch();
 
     /*
     initscr();

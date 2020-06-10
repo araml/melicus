@@ -2,4 +2,4 @@
 all: main
 
 main:
-	clang main.c -lncurses -o main -std=c99
+	clang main.c -lncurses -o main -std=c99 -ggdb
