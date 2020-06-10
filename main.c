@@ -9,8 +9,8 @@
 typedef struct {
     char *lyrics;
     size_t size; // total size
-    char cl_idx; // line index (in the whole file)
-    char cl[BLOCKSIZE]; // current `line`
+    size_t cl_idx; // line index (in the whole file)
+    char *cl; // current `line`
 } lyrics_t;
 
 lyrics_t *create_lyrics() {
@@ -18,11 +18,12 @@ lyrics_t *create_lyrics() {
     lyrics->lyrics = NULL;
     lyrics->size = 0;
     lyrics->cl_idx = 0;
-    lyrics->cl[0] = '\0';
+    lyrics->cl = (char *)malloc(BLOCKSIZE);
     return lyrics;
 }
 
 void free_lyrics(lyrics_t *lyrics) {
+    free(lyrics->cl);
     free(lyrics->lyrics);
 }
 
@@ -55,24 +56,26 @@ void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
         free(lyrics->lyrics);
 
         lyrics->lyrics = tmp_buf;
-        position += BLOCKSIZE;
-        lyrics->size += BLOCKSIZE;
+        position += status;
+        lyrics->size += status;
     }
 }
 
 char* next_line(lyrics_t *lyrics) {
-    if (lyrics->cl_idx == lyrics->size)
+    if (lyrics->cl_idx >= lyrics->size)
         return 0;
 
     for (size_t i = 0; i < BLOCKSIZE; i++) {
         lyrics->cl[i] = '\0';
     }
 
-    for (size_t k = 0, i = lyrics->cl_idx; lyrics->lyrics[i] != '\n'; i++, k++) {
+    for (size_t k = 0, i = lyrics->cl_idx;
+        lyrics->lyrics[i] != '\n'; i++, k++) {
         lyrics->cl[k] = lyrics->lyrics[i];
     }
 
     lyrics->cl_idx += length(lyrics->cl) + 1; // +1 for the '\n'
+    printf("(%zu, %zu)\n", lyrics->size, lyrics->cl_idx);
     return lyrics->cl;
 }
 
@@ -87,25 +90,9 @@ int main(int argc, char *argv[]) {
     // set ups memory and clear screen
     lyrics_t *lyrics = create_lyrics();
     load_lyric_from_file(lyrics, "test.lyric");
-    free_lyrics(lyrics);
 
     //printf("Lyrics:\n %s", lyrics->lyrics);
 
-    char *line;
-    size_t height = 3;
-    while (true) {
-        char *line = next_line(lyrics);
-        if (!line) {
-            break;
-        }
-
-        mvprintw(height, 4, "%s", line);
-        height++;
-    }
-
-    getch();
-
-    /*
     initscr();
 
     struct winsize max;
@@ -116,9 +103,23 @@ int main(int argc, char *argv[]) {
     //int init_pos = center(l.length(), max.ws_row);
     //    mvprintw(height, init_pos, "%s", l.c_str());
 
+    char *line;
+    while (true) {
+        char *line = next_line(lyrics);
+        if (line == 0) {
+            break;
+        }
+
+        printf("%s\n", line);
+        //mvprintw(height, 4, "%s", line);
+        height++;
+    }
+
     getch();
     // refresh(); // Refreshes the screen to match whats in memory
 
     endwin(); // Frees all ncurses related stuff*/
+
+    free_lyrics(lyrics);
     return 0;
 }
