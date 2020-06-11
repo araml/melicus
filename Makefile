@@ -2,4 +2,4 @@
 all: main
 
 main:
-	clang main.c -lncurses -o main -std=c99 -ggdb
+	clang src/main.c src/lyrics.c -lncurses -o main -std=c99 -ggdb -Isrc/

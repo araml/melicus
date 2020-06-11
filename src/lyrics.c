@@ -1,18 +1,8 @@
-#include <ncurses.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <fcntl.h>
-
-#define BLOCKSIZE 4096
-
-typedef struct {
-    char *lyrics;
-    size_t size; // total size
-    size_t reserved_size;
-    size_t cl_idx; // line index (in the whole file)
-    char *cl; // current `line`
-} lyrics_t;
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <lyrics.h>
 
 lyrics_t *create_lyrics() {
     lyrics_t *lyrics = (lyrics_t *)malloc(sizeof(lyrics_t));
@@ -73,6 +63,7 @@ char* next_line(lyrics_t *lyrics) {
         lyrics->cl[i] = '\0';
     }
 
+    // TODO: Right now not accounting for \r\n
     for (size_t k = 0, i = lyrics->cl_idx;
         lyrics->lyrics[i] != '\n'; i++, k++) {
         lyrics->cl[k] = lyrics->lyrics[i];
@@ -82,55 +73,8 @@ char* next_line(lyrics_t *lyrics) {
     return lyrics->cl;
 }
 
-int center(int text_width, int screen_width) {
-    screen_width = screen_width >> 1;
+int center_text(int text_width, int term_width) {
+    term_width = term_width >> 1;
     text_width = text_width >> 1;
-    return screen_width - text_width;
-}
-
-int main(int argc, char *argv[]) {
-    // initializes screen
-    // set ups memory and clear screen
-    lyrics_t *lyrics = create_lyrics();
-    load_lyric_from_file(lyrics, "test.lyric");
-
-    //printf("Lyrics:\n %s", lyrics->lyrics);
-
-    initscr();
-
-    struct winsize max;
-    ioctl(1, TIOCGWINSZ, &max);
-    //getmaxyx(0, height, width);
-    int height = 3;
-    printf("width: %d, height %d\n", max.ws_row, max.ws_col);
-    //    mvprintw(height, init_pos, "%s", l.c_str());
-
-    nodelay(stdscr, true);
-
-    char *line;
-    while (true) {
-        char *line = next_line(lyrics);
-        if (line == 0) {
-            break;
-        }
-
-        //printf("%s\n", line);
-        int init_pos = center(length(line), max.ws_col);
-        mvprintw(height, init_pos, "%s", line);
-        height++;
-    }
-
-    while (true) {
-        if (getch() != ERR) {
-            break;
-        }
-    }
-
-    //getch();
-    // refresh(); // Refreshes the screen to match whats in memory
-
-    endwin(); // Frees all ncurses related stuff*/
-
-    free_lyrics(lyrics);
-    return 0;
+    return term_width - text_width;
 }

@@ -6,10 +6,11 @@ default cmus-status-display format)
 TODO :^) :
 
 - [ ] Display song in cmus-status.txt and recognize if its playing currently or if it is an old status
-- [ ] Search for currently playing song.
+- [ ] Search (online) for currently playing song lyrics.
+- [ ] Resize event
 - [ ] Scrolling.
 - [ ] vim like interface (:q, /search).
-- [ ] create lyric database so we don't have to repeat searches for the same
+- [ ] create lyric db so we don't have to repeat searches for the same
   song/offline usage.
 
 
