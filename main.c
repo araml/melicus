@@ -9,6 +9,7 @@
 typedef struct {
     char *lyrics;
     size_t size; // total size
+    size_t reserved_size;
     size_t cl_idx; // line index (in the whole file)
     char *cl; // current `line`
 } lyrics_t;
@@ -39,23 +40,28 @@ void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
     }
 
     int lyric_fd = open(path, O_RDONLY);
-    lyrics->lyrics = (char *)malloc(BLOCKSIZE);
-    lyrics->size = BLOCKSIZE;
     size_t position = 0;
     ssize_t status = 0;
-    while (true) {
-        status = read(lyric_fd, lyrics->lyrics + position, BLOCKSIZE);
-        if (status == -1)
-            perror("Error loading lyrics");
-        if (status == 0)
-            break;
 
+
+
+
+    while (true) {
         char *tmp_buf = (char *)malloc(BLOCKSIZE + lyrics->size);
         for (size_t i = 0; i < lyrics->size; i++)
             tmp_buf[i] = lyrics->lyrics[i];
         free(lyrics->lyrics);
-
         lyrics->lyrics = tmp_buf;
+
+        status = read(lyric_fd, lyrics->lyrics + position, BLOCKSIZE);
+        if (status == -1) {
+            perror("Error loading lyrics");
+            return;
+        }
+        if (status == 0)
+            break;
+
+
         position += status;
         lyrics->size += status;
     }
@@ -75,7 +81,6 @@ char* next_line(lyrics_t *lyrics) {
     }
 
     lyrics->cl_idx += length(lyrics->cl) + 1; // +1 for the '\n'
-    printf("(%zu, %zu)\n", lyrics->size, lyrics->cl_idx);
     return lyrics->cl;
 }
 
@@ -110,8 +115,8 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        printf("%s\n", line);
-        //mvprintw(height, 4, "%s", line);
+        //printf("%s\n", line);
+        mvprintw(height, 4, "%s", line);
         height++;
     }
 
