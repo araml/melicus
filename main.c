@@ -26,6 +26,7 @@ lyrics_t *create_lyrics() {
 void free_lyrics(lyrics_t *lyrics) {
     free(lyrics->cl);
     free(lyrics->lyrics);
+    free(lyrics);
 }
 
 size_t length(const char *line) {
@@ -42,9 +43,6 @@ void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
     int lyric_fd = open(path, O_RDONLY);
     size_t position = 0;
     ssize_t status = 0;
-
-
-
 
     while (true) {
         char *tmp_buf = (char *)malloc(BLOCKSIZE + lyrics->size);
@@ -86,7 +84,7 @@ char* next_line(lyrics_t *lyrics) {
 
 int center(int text_width, int screen_width) {
     screen_width = screen_width >> 1;
-    text_width = screen_width >> 1;
+    text_width = text_width >> 1;
     return screen_width - text_width;
 }
 
@@ -101,11 +99,10 @@ int main(int argc, char *argv[]) {
     initscr();
 
     struct winsize max;
-    ioctl(0, TIOCGWINSZ, &max);
-    // getmaxyx(0, height, width);
+    ioctl(1, TIOCGWINSZ, &max);
+    //getmaxyx(0, height, width);
     int height = 3;
-
-    //int init_pos = center(l.length(), max.ws_row);
+    printf("width: %d, height %d\n", max.ws_row, max.ws_col);
     //    mvprintw(height, init_pos, "%s", l.c_str());
 
     char *line;
@@ -116,7 +113,8 @@ int main(int argc, char *argv[]) {
         }
 
         //printf("%s\n", line);
-        mvprintw(height, 4, "%s", line);
+        int init_pos = center(length(line), max.ws_col);
+        mvprintw(height, init_pos, "%s", line);
         height++;
     }
 
