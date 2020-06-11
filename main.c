@@ -105,6 +105,8 @@ int main(int argc, char *argv[]) {
     printf("width: %d, height %d\n", max.ws_row, max.ws_col);
     //    mvprintw(height, init_pos, "%s", l.c_str());
 
+    nodelay(stdscr, true);
+
     char *line;
     while (true) {
         char *line = next_line(lyrics);
@@ -118,7 +120,13 @@ int main(int argc, char *argv[]) {
         height++;
     }
 
-    getch();
+    while (true) {
+        if (getch() != ERR) {
+            break;
+        }
+    }
+
+    //getch();
     // refresh(); // Refreshes the screen to match whats in memory
 
     endwin(); // Frees all ncurses related stuff*/
