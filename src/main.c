@@ -2,6 +2,8 @@
 #include <sys/ioctl.h>
 #include <ncurses.h>
 
+const char *status_path = "/home/maek/cmus-status.txt";
+
 int main(int argc, char *argv[]) {
     // initializes screen
     // set ups memory and clear screen
@@ -21,6 +23,7 @@ int main(int argc, char *argv[]) {
 
     nodelay(stdscr, true);
 
+    /*
     char *line;
     while (true) {
         char *line = next_line(lyrics);
@@ -33,6 +36,9 @@ int main(int argc, char *argv[]) {
         mvprintw(height, init_pos, "%s", line);
         height++;
     }
+    */
+
+    //int status_file = open(status_path, O_RDONLY);
 
     while (true) {
         if (getch() != ERR) {

@@ -55,6 +55,16 @@ void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
     }
 }
 
+void load_lyric_from_memory(lyrics_t *lyrics, const char *memory) {
+    size_t sz;
+    for (size_t i = 0; memory[i] != '\0'; i++) { sz++; }
+    lyrics->size = sz + 1;
+    lyrics->lyrics = (char *)malloc(lyrics->size);
+    for (size_t i = 0; i < lyrics->size; i++) {
+        lyrics->lyrics[i] = memory[i];
+    }
+}
+
 char* next_line(lyrics_t *lyrics) {
     if (lyrics->cl_idx >= lyrics->size)
         return 0;
