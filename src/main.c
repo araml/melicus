@@ -1,9 +1,10 @@
+#define _XOPEN_SOURCE 500
 #include <lyrics.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <ncurses.h>
-
+#include <unistd.h>
 
 const char *status_path = "/home/maek/cmus-status.txt";
 
@@ -13,8 +14,7 @@ int get_line(int fd, char **sline) {
     size_t used_size = 0;
 
     // TODO: Fix this, on several calls is trashing previous memory
-    *sline = (char *)malloc(1);
-    char *line = *sline;
+    char *line;
     char c;
     int status;
     while (true) {
@@ -22,6 +22,11 @@ int get_line(int fd, char **sline) {
 
         if (status == 0 || status == -1)
             return status;
+
+        if (used_size == 0 && reserved_size == 1) {
+            *sline = (char *) malloc(1);
+            line = *sline;
+        }
 
         if (c == '\n') {
             if (reserved_size == used_size) {
@@ -31,6 +36,10 @@ int get_line(int fd, char **sline) {
             }
 
             line[used_size] = '\0';
+            off_t curr_offset = lseek(fd, 0, SEEK_CUR);
+            ssize_t st = pread(fd, &c, 1, curr_offset);
+            if (st == 0)
+                return 0;
             return 1;
         }
 
@@ -46,7 +55,9 @@ int get_line(int fd, char **sline) {
 char *load_name_from_status_file(const char *path) {
     int status_fd = open(path, O_RDONLY);
     char *line = NULL;
-    while (get_line(status_fd, &line) != 0) {}
+    while (get_line(status_fd, &line) != 0) {
+        free(line);
+    }
 
     return line;
 }
