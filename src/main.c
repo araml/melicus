@@ -5,16 +5,26 @@
 #include <sys/ioctl.h>
 #include <ncurses.h>
 #include <unistd.h>
+#include <string.h>
 
 const char *status_path = "/home/maek/cmus-status.txt";
 
+int realloc_wrapper(char **ptr, size_t size) {
+    char *tmp = realloc(*ptr, size);
+    if (tmp == NULL)
+        return -1;
+
+    *ptr = tmp;
+
+    return 0;
+}
 
 int get_line(int fd, char **sline) {
     size_t reserved_size = 1;
     size_t used_size = 0;
 
     // TODO: Fix this, on several calls is trashing previous memory
-    char *line;
+    //char *line = NULL;
     char c;
     int status;
     while (true) {
@@ -25,17 +35,18 @@ int get_line(int fd, char **sline) {
 
         if (used_size == 0 && reserved_size == 1) {
             *sline = (char *) malloc(1);
-            line = *sline;
+            memset(*sline, 0, 1);
+      //      line = *sline;
         }
 
         if (c == '\n') {
             if (reserved_size == used_size) {
-                realloc(*sline, reserved_size + 1);
+                realloc_wrapper(sline, reserved_size + 1);
             } else {
-                realloc(*sline, used_size + 1);
+                realloc_wrapper(sline, used_size + 1);
             }
 
-            line[used_size] = '\0';
+            (*sline)[used_size] = '\0';
             off_t curr_offset = lseek(fd, 0, SEEK_CUR);
             ssize_t st = pread(fd, &c, 1, curr_offset);
             if (st == 0)
@@ -45,10 +56,12 @@ int get_line(int fd, char **sline) {
 
         if (reserved_size == used_size) {
             reserved_size *= 2;
-            realloc(*sline, reserved_size);
+            realloc_wrapper(sline, reserved_size);
+        //    line = *sline;
         }
 
-        line[used_size++] = c;
+        (*sline)[used_size] = c;
+        used_size++;
     }
 }
 
@@ -59,6 +72,7 @@ char *load_name_from_status_file(const char *path) {
         free(line);
     }
 
+    close(status_fd);
     return line;
 }
 
@@ -67,15 +81,21 @@ int main(int argc, char *argv[]) {
     // set ups memory and clear screen
     lyrics_t *lyrics = create_lyrics();
     load_lyric_from_file(lyrics, "test.lyric");
-    char *status = load_name_from_status_file(status_path);
+    char *status = NULL;
+    status = load_name_from_status_file(status_path);
     printf("Status\n%s\n", status);
 
 
     //printf("Lyrics:\n %s", lyrics->lyrics);
 
+    free(status);
+    free_lyrics(lyrics);
     return 0;
+}
 
-    initscr();
+/*
+ *
+     initscr();
 
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);
@@ -86,20 +106,20 @@ int main(int argc, char *argv[]) {
 
     nodelay(stdscr, true);
 
-    /*
-    char *line;
-    while (true) {
-        char *line = next_line(lyrics);
-        if (line == 0) {
-            break;
-        }
+  //
+  //  char *line;
+  //  while (true) {
+  //      char *line = next_line(lyrics);
+  //      if (line == 0) {
+  //          break;
+  //      }
+//
+  //      //printf("%s\n", line);
+  //      int init_pos = center_text(length(line), max.ws_col);
+  //      mvprintw(height, init_pos, "%s", line);
+  //      height++;
+  //  }
 
-        //printf("%s\n", line);
-        int init_pos = center_text(length(line), max.ws_col);
-        mvprintw(height, init_pos, "%s", line);
-        height++;
-    }
-    */
 
     //int status_file = open(status_path, O_RDONLY);
 
@@ -112,8 +132,6 @@ int main(int argc, char *argv[]) {
     //getch();
     // refresh(); // Refreshes the screen to match whats in memory
 
-    endwin(); // Frees all ncurses related stuff*/
+    endwin(); // Frees all ncurses related stuff/
 
-    free_lyrics(lyrics);
-    return 0;
-}
+    free_lyrics(lyrics);*/
