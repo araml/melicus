@@ -5,7 +5,8 @@ default cmus-status-display format)
 
 TODO :^) :
 
-- [ ] Display song in cmus-status.txt and recognize if its playing currently or if it is an old status
+- [x] Display song in cmus-status.txt
+- [ ] Recognize if its playing currently or if it is an old status
 - [ ] Search (online) for currently playing song lyrics.
 - [ ] Resize event
 - [ ] Scrolling.
