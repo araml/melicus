@@ -22,8 +22,6 @@ int get_line(int fd, char **sline) {
     size_t reserved_size = 1;
     size_t used_size = 0;
 
-    // TODO: Fix this, on several calls is trashing previous memory
-    //char *line = NULL;
     char c;
     int status;
     while (true) {
@@ -64,6 +62,7 @@ int get_line(int fd, char **sline) {
     }
 }
 
+// TODO: check if all the loading functions can be merged into a single function #2
 char *load_name_from_status_file(const char *path) {
     int status_fd = open(path, O_RDONLY);
     char *line = NULL;

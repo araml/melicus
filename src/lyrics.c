@@ -3,12 +3,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <lyrics.h>
+#include <string_utils.h>
 
 lyrics_t *create_lyrics() {
     lyrics_t *lyrics = (lyrics_t *)malloc(sizeof(lyrics_t));
     lyrics->lyrics = NULL;
     lyrics->size = 0;
     lyrics->cl_idx = 0;
+    // TODO: possible lyrics with more than 4k in a single line?
+    // TODO: maybe bug if song isnt line break correctly
     lyrics->cl = (char *)malloc(BLOCKSIZE);
     return lyrics;
 }
@@ -19,12 +22,7 @@ void free_lyrics(lyrics_t *lyrics) {
     free(lyrics);
 }
 
-size_t length(const char *line) {
-    size_t len = 0;
-    for (; line && line[len] != '\0'; len++) {}
-    return len;
-}
-
+// TODO: check if all the loading functions can be merged into a single function
 void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
     if (!lyrics) {
         return;
