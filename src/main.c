@@ -1,7 +1,36 @@
 #include <ncurses.h>
+#include <curl/curl.h>
 
 #include <lyrics.h>
 #include <cmus_status.h>
+#include <string_utils.h>
+#include <string.h>
+
+char* load_cmus_status() {
+    int pipe_fd[2]; // Read from 0 write to 1
+    pipe(pipe_fd);
+
+
+    int pid = fork();
+    if (pid == 0) {
+        printf("hmm\n");
+        close(pipe_fd[0]);
+        printf("hmm\n");
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        char bin[] = "/usr/bin/cmus-remote";
+        char *args[3] = {"cmus-remote", "-Q", NULL};
+        execvp(bin, args);
+    } else {
+        close(pipe_fd[1]);
+        char *line = NULL;
+        while (get_line(pipe_fd[0], &line) != 0) {
+            printf("%s\n", line);
+            free(line);
+        }
+    }
+    return NULL;
+}
+
 
 int main(int argc, char *argv[]) {
     // initializes screen
@@ -9,11 +38,13 @@ int main(int argc, char *argv[]) {
     lyrics_t *lyrics = create_lyrics();
     load_lyric_from_file(lyrics, "test.lyric");
     char *status = NULL;
-    status = load_name_from_status_file(cmus_status_path);
-    printf("Status\n%s\n", status);
+    status = load_cmus_status();
 
-
-    //printf("Lyrics:\n %s", lyrics->lyrics);
+    string_split *ss = create_string_string_split(status, '-');
+    printf("Status split\n");
+    for (size_t i = 0; i < ss->used_size; i++)
+        printf("%s\n", ss->strings[i]);
+    destroy_string_split(ss);
 
     free(status);
     free_lyrics(lyrics);
