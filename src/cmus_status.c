@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include <cmus_status.h>
+#include <stdio.h>
 
 const char *cmus_status_path = "/home/maek/cmus-status.txt";
 
@@ -62,15 +63,25 @@ int get_line(int fd, char **sline) {
     }
 }
 
-// TODO: check if all the loading functions can be merged into a single function #2
-char *load_name_from_status_file(const char *path) {
-    int status_fd = open(path, O_RDONLY);
-    char *line = NULL;
-    while (get_line(status_fd, &line) != 0) {
-        free(line);
-    }
+char* get_cmus_status() {
+    int pipe_fd[2]; // Read from 0 write to 1
+    pipe(pipe_fd);
 
-    close(status_fd);
-    return line;
+    int pid = fork();
+    if (pid == 0) {
+        close(pipe_fd[0]);
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        char bin[] = "/usr/bin/cmus-remote";
+        char *args[3] = {"cmus-remote", "-Q", NULL};
+        execvp(bin, args);
+    } else {
+        close(pipe_fd[1]);
+        char *line = NULL;
+        while (get_line(pipe_fd[0], &line) != 0) {
+            printf("%s\n", line);
+            free(line);
+        }
+    }
+    return NULL;
 }
 

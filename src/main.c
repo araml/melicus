@@ -6,39 +6,13 @@
 #include <string_utils.h>
 #include <string.h>
 
-char* load_cmus_status() {
-    int pipe_fd[2]; // Read from 0 write to 1
-    pipe(pipe_fd);
-
-
-    int pid = fork();
-    if (pid == 0) {
-        printf("hmm\n");
-        close(pipe_fd[0]);
-        printf("hmm\n");
-        dup2(pipe_fd[1], STDOUT_FILENO);
-        char bin[] = "/usr/bin/cmus-remote";
-        char *args[3] = {"cmus-remote", "-Q", NULL};
-        execvp(bin, args);
-    } else {
-        close(pipe_fd[1]);
-        char *line = NULL;
-        while (get_line(pipe_fd[0], &line) != 0) {
-            printf("%s\n", line);
-            free(line);
-        }
-    }
-    return NULL;
-}
-
-
 int main(int argc, char *argv[]) {
     // initializes screen
     // set ups memory and clear screen
     lyrics_t *lyrics = create_lyrics();
     load_lyric_from_file(lyrics, "test.lyric");
     char *status = NULL;
-    status = load_cmus_status();
+    status = get_cmus_status();
 
     string_split *ss = create_string_string_split(status, '-');
     printf("Status split\n");
