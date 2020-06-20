@@ -54,6 +54,28 @@ string_split *create_string_string_split(const char *s, char c) {
     return ss;
 }
 
+int add_to_string_split(string_split *ss, const char *s) {
+    if (!s)  // NULL string
+        return -1;
+
+    if (ss->used_size == ss->reserved_size) {
+        char **tmp = (char **)realloc(ss->strings,
+                                      sizeof(char *) *
+                                      (ss->reserved_size *= 2));
+        if (tmp != NULL)
+            ss->strings = tmp;
+        else return -1;
+    }
+
+    ss->strings[ss->used_size] = (char *)malloc(length(s) + 1);
+    memset(ss->strings[ss->used_size], '\0', length(s) + 1);
+    for (size_t i = 0; i < length(s); i++) {
+        ss->strings[ss->used_size][i] = s[i];
+    }
+
+    ss->used_size++;
+}
+
 void destroy_string_split(string_split *ss) {
     for (size_t i = 0; i < ss->used_size; i++)
         free(ss->strings[i]);

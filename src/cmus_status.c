@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include <cmus_status.h>
+
 #include <stdio.h>
 
 const char *cmus_status_path = "/home/maek/cmus-status.txt";
@@ -63,7 +64,7 @@ int get_line(int fd, char **sline) {
     }
 }
 
-char* get_cmus_status() {
+string_split* get_cmus_status() {
     int pipe_fd[2]; // Read from 0 write to 1
     pipe(pipe_fd);
 
@@ -74,14 +75,18 @@ char* get_cmus_status() {
         char bin[] = "/usr/bin/cmus-remote";
         char *args[3] = {"cmus-remote", "-Q", NULL};
         execvp(bin, args);
+        return NULL;
     } else {
         close(pipe_fd[1]);
         char *line = NULL;
+
+        string_split *ss = create_string_string_split(NULL, '~');
+
         while (get_line(pipe_fd[0], &line) != 0) {
-            printf("%s\n", line);
+            add_to_string_split(ss, line);
             free(line);
         }
+        return ss;
     }
-    return NULL;
 }
 

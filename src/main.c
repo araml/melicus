@@ -11,16 +11,14 @@ int main(int argc, char *argv[]) {
     // set ups memory and clear screen
     lyrics_t *lyrics = create_lyrics();
     load_lyric_from_file(lyrics, "test.lyric");
-    char *status = NULL;
-    status = get_cmus_status();
 
-    string_split *ss = create_string_string_split(status, '-');
-    printf("Status split\n");
+    string_split *ss = get_cmus_status();
+    printf("CMUS Status:\n");
+
     for (size_t i = 0; i < ss->used_size; i++)
         printf("%s\n", ss->strings[i]);
     destroy_string_split(ss);
 
-    free(status);
     free_lyrics(lyrics);
     return 0;
 }
