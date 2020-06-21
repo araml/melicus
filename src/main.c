@@ -1,10 +1,10 @@
 #include <ncurses.h>
-#include <curl/curl.h>
 
 #include <lyrics.h>
 #include <cmus_status.h>
 #include <string_utils.h>
 #include <string.h>
+#include <network.h>
 
 int main(int argc, char *argv[]) {
     // initializes screen
@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
     load_lyric_from_file(lyrics, "test.lyric");
 
     string_split *ss = get_cmus_status();
+    printf("CMUS status lines: %zu\n", ss->used_size);
     printf("CMUS Status:\n");
 
     for (size_t i = 0; i < ss->used_size; i++)
@@ -20,6 +21,19 @@ int main(int argc, char *argv[]) {
     destroy_string_split(ss);
 
     free_lyrics(lyrics);
+
+    curl_buffer *buf = malloc(sizeof(curl_buffer));
+   // memset(buf, 0, sizeof(curl_buffer));
+    buf->buffer = NULL;
+    buf->size = 0;
+    CURL *handle = make_handle("https://songmeanings.com/artist/directory/", buf);
+    curl_easy_perform(handle);
+    //printf("%s", buf->buffer);
+    curl_easy_cleanup(handle);
+
+    free(buf->buffer);
+    free(buf);
+
     return 0;
 }
 
