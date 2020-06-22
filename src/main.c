@@ -5,8 +5,71 @@
 #include <string_utils.h>
 #include <string.h>
 #include <network.h>
+#include <song_data.h>
+
+song_data *current_song;
+
+const char artist[] = "artist";
+const char album[] = "album";
+const char song_title[] = "title";
+
+int check_prefix(const char *prefix, const char *s) {
+    for (size_t i = 0; i < length(prefix) && i < length(s); i++) {
+        // CMUS_remote q data starts after the tag word, maybe regex it?
+        if (prefix[i] != s[i + 4])
+            return 0;
+    }
+
+    return 1;
+}
+
+void destroy_song_data(song_data *d) {
+    free(d->album);
+    free(d->song_name);
+    free(d->name);
+    free(d);
+}
+
+void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
+    if (!check_prefix(prefix, subs)) {
+        return;
+    }
+
+    //TODO: allocating a few bytes more here but meh
+    *to_fill = (char *)malloc(length(subs));
+    // hardcoding part of the cmus struct "tag album ALBUM_NAME"
+    // 3 letters for tag, 2 spaces and the word album/artist/song
+    for (size_t i = 0, k = length(prefix) + 5; i < length(subs); i++, k++) {
+        (*to_fill)[i] = subs[k];
+    }
+}
+
+song_data *get_current_song() {
+    string_split *ss = get_cmus_status();
+    if (ss->used_size == 0) {
+        return NULL;
+    }
+
+    song_data *s = (song_data *)malloc(sizeof(song_data));
+    s->name = s->album = s->song_name = NULL;
+
+    for (size_t i = 0; i < ss->used_size; i++) {
+        if_substring_fill(&(s->album), album, ss->strings[i]);
+        if_substring_fill(&(s->song_name), song_title, ss->strings[i]);
+        if_substring_fill(&(s->name), artist, ss->strings[i]);
+
+        if (s->name && s->song_name && s->album)
+            break;
+    }
+
+    return s;
+}
 
 int main(int argc, char *argv[]) {
+    (void) argc; (void)argv;
+    // Initialize current_song data
+    current_song = NULL;
+
     // initializes screen
     // set ups memory and clear screen
     lyrics_t *lyrics = create_lyrics();
@@ -22,7 +85,12 @@ int main(int argc, char *argv[]) {
 
     free_lyrics(lyrics);
 
-    curl_buffer *buf = malloc(sizeof(curl_buffer));
+    song_data *s = get_current_song();
+    printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->name, s->album, s->song_name);
+
+
+    /*
+    curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
    // memset(buf, 0, sizeof(curl_buffer));
     buf->buffer = NULL;
     buf->size = 0;
@@ -32,7 +100,7 @@ int main(int argc, char *argv[]) {
     curl_easy_cleanup(handle);
 
     free(buf->buffer);
-    free(buf);
+    free(buf);*/
 
     return 0;
 }
