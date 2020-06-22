@@ -23,16 +23,19 @@ size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
 CURL *make_handle(char *url, curl_buffer *cbuf) {
     CURL *handle = curl_easy_init();
 
-    /* Important: use HTTP2 over HTTPS */
+    // Curl boilerplate.
     curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
     curl_easy_setopt(handle, CURLOPT_URL, url);
 
-    /* buffer body */
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, grow_buffer);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, cbuf);
     curl_easy_setopt(handle, CURLOPT_PRIVATE, cbuf);
     curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L);
+
+    // Follow location in case we get redirected because there is just a single
+    // song with the name (at least in SM)
+    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
     return handle;
 }
 
-
+char *make_song_url(char *song_name);

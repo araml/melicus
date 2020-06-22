@@ -1,6 +1,7 @@
 #include <string_utils.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 size_t length(const char *line) {
     size_t len = 0;
@@ -87,7 +88,7 @@ void destroy_string_split(string_split *ss) {
 int check_prefix(const char *prefix, const char *s) {
     for (size_t i = 0; i < length(prefix) && i < length(s); i++) {
         // CMUS_remote q data starts after the tag word, maybe regex it?
-        if (prefix[i] != s[i + 4])
+        if (prefix[i] != s[i])
             return 0;
     }
 
@@ -95,7 +96,7 @@ int check_prefix(const char *prefix, const char *s) {
 }
 
 void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
-    if (!check_prefix(prefix, subs)) {
+    if (!check_prefix(prefix, subs + 4)) {
         return;
     }
 
@@ -107,4 +108,14 @@ void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
 
     memcpy(*to_fill, subs + length(prefix) + 5,
            length(subs) - length(prefix) - 5 + 1);
+}
+
+// TODO: VERY NAIVE NOW, should fix with a real algorithm later.
+size_t find_in_string(char *s, char *to_find) {
+    for (size_t i = 0; i < length(s); i++) {
+        if (check_prefix(to_find, s + i)) {
+            return i;
+        }
+    }
+    return -1;
 }

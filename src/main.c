@@ -9,6 +9,19 @@
 
 song_data *current_song;
 
+char *make_song_url(char *song_name) {
+    char prefix[] = "https://songmeanings.com/query/?query=";
+    char postfix[] = "&type=songtitles";
+    size_t url_length = length(prefix) + length(postfix) + length(song_name) + 1;
+    char *url = (char *)malloc(url_length);
+    memset(url, 0, url_length);
+    memcpy(url, prefix, length(prefix));
+    memcpy(url + length(prefix), song_name, length(song_name));
+    memcpy(url + length(prefix) + length(song_name), postfix, length(postfix));
+    printf("URL: %s\n", url);
+    return url;
+}
+
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
@@ -33,21 +46,25 @@ int main(int argc, char *argv[]) {
     if (s)
         printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->name, s->album, s->song_name);
 
-    destroy_song_data(s);
 
-    /*
+
+
+    char *url = make_song_url(s->song_name);
+
     curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
    // memset(buf, 0, sizeof(curl_buffer));
     buf->buffer = NULL;
     buf->size = 0;
-    CURL *handle = make_handle("https://songmeanings.com/artist/directory/", buf);
+
+
+    CURL *handle = make_handle(url, buf);
     curl_easy_perform(handle);
-    //printf("%s", buf->buffer);
+    printf("%s", buf->buffer);
     curl_easy_cleanup(handle);
 
     free(buf->buffer);
-    free(buf);*/
-
+    free(buf);
+    destroy_song_data(s);
     return 0;
 }
 
