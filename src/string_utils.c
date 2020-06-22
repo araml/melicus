@@ -74,6 +74,7 @@ int add_to_string_split(string_split *ss, const char *s) {
     }
 
     ss->used_size++;
+    return 0;
 }
 
 void destroy_string_split(string_split *ss) {
@@ -81,4 +82,29 @@ void destroy_string_split(string_split *ss) {
         free(ss->strings[i]);
     free(ss->strings);
     free(ss);
+}
+
+int check_prefix(const char *prefix, const char *s) {
+    for (size_t i = 0; i < length(prefix) && i < length(s); i++) {
+        // CMUS_remote q data starts after the tag word, maybe regex it?
+        if (prefix[i] != s[i + 4])
+            return 0;
+    }
+
+    return 1;
+}
+
+void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
+    if (!check_prefix(prefix, subs)) {
+        return;
+    }
+
+    //TODO: allocating a few bytes more here but meh
+    *to_fill = (char *)malloc(length(subs));
+    memset(*to_fill, 0, length(subs));
+    // hardcoding part of the cmus struct "tag album ALBUM_NAME"
+    // 3 letters for tag, 2 spaces and the word album/artist/song
+
+    memcpy(*to_fill, subs + length(prefix) + 5,
+           length(subs) - length(prefix) - 5 + 1);
 }

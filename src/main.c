@@ -9,64 +9,6 @@
 
 song_data *current_song;
 
-const char artist[] = "artist";
-const char album[] = "album";
-const char song_title[] = "title";
-
-int check_prefix(const char *prefix, const char *s) {
-    for (size_t i = 0; i < length(prefix) && i < length(s); i++) {
-        // CMUS_remote q data starts after the tag word, maybe regex it?
-        if (prefix[i] != s[i + 4])
-            return 0;
-    }
-
-    return 1;
-}
-
-void destroy_song_data(song_data *d) {
-    free(d->album);
-    free(d->song_name);
-    free(d->name);
-    free(d);
-}
-
-void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
-    if (!check_prefix(prefix, subs)) {
-        return;
-    }
-
-    //TODO: allocating a few bytes more here but meh
-    *to_fill = (char *)malloc(length(subs));
-    memset(*to_fill, 0, length(subs));
-    // hardcoding part of the cmus struct "tag album ALBUM_NAME"
-    // 3 letters for tag, 2 spaces and the word album/artist/song
-
-    memcpy(*to_fill, subs + length(prefix) + 5,
-           length(subs) - length(prefix) - 5 + 1);
-}
-
-song_data *get_current_song() {
-    string_split *ss = get_cmus_status();
-    if (ss->used_size == 0) {
-        return NULL;
-    }
-
-    song_data *s = (song_data *)malloc(sizeof(song_data));
-    memset(s, 0, sizeof(song_data));
-
-    for (size_t i = 0; i < ss->used_size; i++) {
-        if_substring_fill(&(s->album), album, ss->strings[i]);
-        if_substring_fill(&(s->song_name), song_title, ss->strings[i]);
-        if_substring_fill(&(s->name), artist, ss->strings[i]);
-
-        if (s->name && s->song_name && s->album)
-            break;
-    }
-
-    destroy_string_split(ss);
-    return s;
-}
-
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data

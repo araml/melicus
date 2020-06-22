@@ -14,5 +14,7 @@ size_t get_size_until_next_smybol(const char *s, size_t index, char c);
 string_split *create_string_string_split(const char *s, char c);
 int add_to_string_split(string_split *ss, const char *s);
 void destroy_string_split(string_split *s);
+int check_prefix(const char *prefix, const char *l);
+void if_substring_fill(char **to_fill, const char *prefix, const char *subs);
 
 #endif // STRING_UTILS_H

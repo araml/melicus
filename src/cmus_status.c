@@ -5,10 +5,16 @@
 #include <stdbool.h>
 
 #include <cmus_status.h>
+#include <song_data.h>
+#include <string_utils.h>
 
 #include <stdio.h>
 
 const char *cmus_status_path = "/home/maek/cmus-status.txt";
+// CMUS Tags
+const char artist[] = "artist";
+const char album[] = "album";
+const char song_title[] = "title";
 
 int realloc_wrapper(char **ptr, size_t size) {
     char *tmp = realloc(*ptr, size);
@@ -90,3 +96,24 @@ string_split* get_cmus_status() {
     }
 }
 
+song_data *get_current_song() {
+    string_split *ss = get_cmus_status();
+    if (ss->used_size == 0) {
+        return NULL;
+    }
+
+    song_data *s = (song_data *)malloc(sizeof(song_data));
+    memset(s, 0, sizeof(song_data));
+
+    for (size_t i = 0; i < ss->used_size; i++) {
+        if_substring_fill(&(s->album), album, ss->strings[i]);
+        if_substring_fill(&(s->song_name), song_title, ss->strings[i]);
+        if_substring_fill(&(s->name), artist, ss->strings[i]);
+
+        if (s->name && s->song_name && s->album)
+            break;
+    }
+
+    destroy_string_split(ss);
+    return s;
+}
