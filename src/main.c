@@ -37,11 +37,12 @@ void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
 
     //TODO: allocating a few bytes more here but meh
     *to_fill = (char *)malloc(length(subs));
+    memset(*to_fill, 0, length(subs));
     // hardcoding part of the cmus struct "tag album ALBUM_NAME"
     // 3 letters for tag, 2 spaces and the word album/artist/song
-    for (size_t i = 0, k = length(prefix) + 5; i < length(subs); i++, k++) {
-        (*to_fill)[i] = subs[k];
-    }
+
+    memcpy(*to_fill, subs + length(prefix) + 5,
+           length(subs) - length(prefix) - 5 + 1);
 }
 
 song_data *get_current_song() {
@@ -51,7 +52,7 @@ song_data *get_current_song() {
     }
 
     song_data *s = (song_data *)malloc(sizeof(song_data));
-    s->name = s->album = s->song_name = NULL;
+    memset(s, 0, sizeof(song_data));
 
     for (size_t i = 0; i < ss->used_size; i++) {
         if_substring_fill(&(s->album), album, ss->strings[i]);
@@ -62,6 +63,7 @@ song_data *get_current_song() {
             break;
     }
 
+    destroy_string_split(ss);
     return s;
 }
 
@@ -86,8 +88,10 @@ int main(int argc, char *argv[]) {
     free_lyrics(lyrics);
 
     song_data *s = get_current_song();
-    printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->name, s->album, s->song_name);
+    if (s)
+        printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->name, s->album, s->song_name);
 
+    destroy_song_data(s);
 
     /*
     curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
