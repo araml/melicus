@@ -1,5 +1,6 @@
 #include <network.h>
 #include <stdlib.h>
+#include <string.h>
 
 size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
     size_t size = sz * nmemb; // sz is the width of the byte, nmemb is the # of bytes
@@ -10,6 +11,7 @@ size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
 
     }
 
+    memset(tmp + cbuf->size, 0, size);
     cbuf->buffer = tmp;
     for (size_t i = cbuf->size, k = 0; i < cbuf->size + size; i++, k++) {
         cbuf->buffer[i] = ((char *)contents)[k];

@@ -111,8 +111,8 @@ void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
 }
 
 // TODO: VERY NAIVE NOW, should fix with a real algorithm later.
-size_t find_in_string(char *s, char *to_find) {
-    for (size_t i = 0; i < length(s); i++) {
+size_t find_in_string(const char *s, const char *to_find) {
+    for (size_t i = 0; i <= length(s) - length(to_find); i++) {
         if (check_prefix(to_find, s + i)) {
             return i;
         }

@@ -54,7 +54,7 @@ void load_lyric_from_file(lyrics_t *lyrics, const char *path) {
 }
 
 void load_lyric_from_memory(lyrics_t *lyrics, const char *memory) {
-    size_t sz;
+    size_t sz = 0;
     for (size_t i = 0; memory[i] != '\0'; i++) { sz++; }
     lyrics->size = sz + 1;
     lyrics->lyrics = (char *)malloc(lyrics->size);
@@ -85,4 +85,32 @@ int center_text(int text_width, int term_width) {
     term_width = term_width >> 1;
     text_width = text_width >> 1;
     return term_width - text_width;
+}
+
+/* Gonna parse HTML by hand, I know I shouldn't but i don't care because i'm
+ * assuming the page will be fixed for a long time
+ */
+
+char *get_lyrics_from_page_string(const char *page_string) {
+    char opening_div[] = "<div class=\"holder lyric-box\">";
+    size_t idx = find_in_string(page_string, opening_div);
+
+    char *lyrics = calloc(1, 1);
+    size_t k = 0;
+    size_t lyrics_length = 1;
+    for (size_t i = idx; i < length(page_string); i++) {
+        if (k >= lyrics_length) {
+            char *tmp = realloc(lyrics, lyrics_length *= 2);
+            if (tmp)
+                lyrics = tmp;
+        }
+
+        // very ugly
+        // basically breaks when it finds the closing <div
+        if (page_string[i] == '<' && page_string[i + 1] == 'd')
+            break;
+        lyrics[k++] = page_string[i];
+    }
+    lyrics[k] = '\0';
+    return lyrics;
 }
