@@ -108,9 +108,9 @@ song_data *get_current_song() {
     for (size_t i = 0; i < ss->used_size; i++) {
         if_substring_fill(&(s->album), album, ss->strings[i]);
         if_substring_fill(&(s->song_name), song_title, ss->strings[i]);
-        if_substring_fill(&(s->name), artist, ss->strings[i]);
+        if_substring_fill(&(s->artist_name), artist, ss->strings[i]);
 
-        if (s->name && s->song_name && s->album)
+        if (s->artist_name && s->song_name && s->album)
             break;
     }
 

@@ -92,8 +92,19 @@ int center_text(int text_width, int term_width) {
  */
 
 char *get_lyrics_from_page_string(const char *page_string) {
+    /* We don't know if we got redirected to a page with the song or not
+     * we'll try to match with lyrics first
+     * if we can't find any then we'll search for links to any lyrics
+     * if then we can't find any then the song isn't in the database.
+     */
+
+
+    // Tries to match the lyrics inside the html
     char opening_div[] = "<div class=\"holder lyric-box\">";
     size_t idx = find_in_string(page_string, opening_div);
+    if (idx == (size_t)-1)
+        return NULL;
+
     idx += length(opening_div);
 
     char *lyrics = calloc(1, 1);

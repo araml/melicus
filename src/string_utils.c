@@ -135,3 +135,23 @@ size_t find_in_string(const char *s, const char *to_find) {
     }
     return -1;
 }
+
+int check_suffix(char *text, char *word, size_t text_length, size_t word_length) {
+    for (size_t i = 0; i <= word_length && i <= text_length; i++) {
+        if (text[word_length - i] != word[word_length - i])
+            return 0;
+    }
+
+    return 1;
+}
+
+size_t reverse_find(char *text, char *word, size_t text_length) {
+    size_t word_length = length(word);
+    for (size_t i = 0; i < text_length; i++) {
+        if (check_suffix(text - i, word, text_length - i, word_length - 1)) {
+            return i;
+        }
+        text_length--;
+    }
+    return 0;
+}

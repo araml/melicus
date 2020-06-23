@@ -59,28 +59,12 @@ char *make_song_url(char *song_name) {
     return url;
 }
 
-int main(int argc, char *argv[]) {
-    (void) argc; (void)argv;
-    // Initialize current_song data
-    current_song = NULL;
-
-    // Get current song data
-    song_data *s = get_current_song();
-    if (s)
-        printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->name, s->album, s->song_name);
-
-    // create song URL
-    char *url = make_song_url(s->song_name);
-
+curl_buffer *get_page(char *url) {
     curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
     memset(buf, 0, sizeof(curl_buffer));
-   // buf->buffer = NULL;
-   // buf->size = 0;
-
 
     CURL *handle = make_handle(url, buf);
     curl_easy_perform(handle);
-    //printf("%s", buf->buffer);
     curl_easy_cleanup(handle);
 
     char *tmp = realloc(buf->buffer, buf->size + 1);
@@ -89,14 +73,79 @@ int main(int argc, char *argv[]) {
         buf->size += 1;
     }
     buf->buffer[buf->size - 1] = '\0';
-    char *lyric = get_lyrics_from_page_string(buf->buffer);
-    printf("Lyric: \n%s\n", lyric);
+    return buf;
+}
 
-    free(lyric);
+char *find_link_for_song(char *page, song_data *s) {
+    char *link = (char *)malloc(256); // No link (at least for SM) is longer than 256.
+    memset(link, 0, 256);
+    printf("Artist name: %s\n", s->artist_name);
+    size_t idx = find_in_string(page, s->artist_name);
+    if (idx == (size_t) - 1) // The song is not found
+        return NULL;
+
+    idx = idx - reverse_find(page + idx, s->song_name, idx);
+    if (idx == (size_t) - 1)
+        return NULL;
+
+    char url_delim[] = "href=\"";
+    idx = idx + length(url_delim) - reverse_find(page + idx, url_delim, idx);
+    if (idx == (size_t) - 1)
+        return NULL;
+
+    for (size_t i = 0; i < 256 && page[idx + i] != '"'; i++) {
+        link[i + 6] = page[idx + i];
+    }
+    //songmeanings.com/songs/view/3458764513820548010/
+
+    link[0] = 'h';
+    link[1] = link[2] = 't';
+    link[3] = 'p';
+    link[4] = 's';
+    link[5] = ':';
+
+    printf("Link: %s\n", link);
+
+    return link;
+}
+
+
+char *get_lyrics(song_data *s) {
+    // create song URL
+    char *url = make_song_url(s->song_name);
+    curl_buffer *buf = get_page(url);
+    char *lyric = get_lyrics_from_page_string(buf->buffer);
+    // If lyric is null then we didn't find the song so we have to find the link
+    // to it in the HTML
+    if (!lyric) {
+        char *link = find_link_for_song(buf->buffer, s);
+        buf = get_page(link);
+        lyric = get_lyrics_from_page_string(buf->buffer);
+    }
+
     free(buf->buffer);
     free(buf);
-    destroy_song_data(s);
     free(url);
+    return lyric;
+}
+
+int main(int argc, char *argv[]) {
+    (void) argc; (void)argv;
+    // Initialize current_song data
+    current_song = NULL;
+
+    // Get current song data
+    song_data *s = get_current_song();
+
+    if (s)
+        printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->artist_name, s->album, s->song_name);
+
+    char *lyric = get_lyrics(s);
+    printf("Lyric: \n%s\n", lyric);
+
+
+    free(lyric);
+    destroy_song_data(s);
     return 0;
 }
 

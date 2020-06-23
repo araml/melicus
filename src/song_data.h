@@ -2,7 +2,7 @@
 #define SONG_DATA_H
 
 typedef struct {
-    char *name;
+    char *artist_name;
     char *album;
     char *song_name;
 } song_data;

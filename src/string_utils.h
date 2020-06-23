@@ -17,5 +17,6 @@ void destroy_string_split(string_split *s);
 int check_prefix(const char *prefix, const char *l);
 void if_substring_fill(char **to_fill, const char *prefix, const char *subs);
 size_t find_in_string(const char *s, const char *to_find);
-
+int check_suffix(char *text, char *word, size_t text_length, size_t word_length);
+size_t reverse_find(char *text, char *word, size_t text_length);
 #endif // STRING_UTILS_H
