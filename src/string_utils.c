@@ -86,7 +86,9 @@ void destroy_string_split(string_split *ss) {
 }
 
 int check_prefix(const char *prefix, const char *s) {
-    for (size_t i = 0; i < length(prefix) && i < length(s); i++) {
+    size_t prefix_length = length(prefix);
+    size_t s_length = length(s);
+    for (size_t i = 0; i < prefix_length && i < s_length; i++) {
         // CMUS_remote q data starts after the tag word, maybe regex it?
         if (prefix[i] != s[i])
             return 0;
@@ -110,10 +112,24 @@ void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
            length(subs) - length(prefix) - 5 + 1);
 }
 
+int check_prefix_with_length(const char *prefix, const char *s, size_t prefix_length,
+        size_t s_length) {
+    for (size_t i = 0; i < prefix_length && i < s_length; i++) {
+        // CMUS_remote q data starts after the tag word, maybe regex it?
+        if (prefix[i] != s[i])
+            return 0;
+    }
+
+    return 1;
+
+}
+
 // TODO: VERY NAIVE NOW, should fix with a real algorithm later.
 size_t find_in_string(const char *s, const char *to_find) {
-    for (size_t i = 0; i <= length(s) - length(to_find); i++) {
-        if (check_prefix(to_find, s + i)) {
+    size_t prefix_length = length(to_find);
+    size_t s_length = length(s);
+    for (size_t i = 0; i <= s_length - prefix_length; i++) {
+        if (check_prefix_with_length(to_find, s + i, s_length - i, prefix_length)) {
             return i;
         }
     }

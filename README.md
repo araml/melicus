@@ -1,4 +1,6 @@
-# Cmus lyric viewer
+# Melicus
 
-Shows the lyric (if available) of the current song being played in cmus
+## A terminal lyric viewer
+
+Melicus is a terminal lyric viewer for programs like cmus.
 
