@@ -119,12 +119,13 @@ char *get_lyrics(song_data *s) {
     // to it in the HTML
     if (!lyric) {
         char *link = find_link_for_song(buf->buffer, s);
+        destroy_curl_buffer(buf);
         buf = get_page(link);
         lyric = get_lyrics_from_page_string(buf->buffer);
+        free(link);
     }
 
-    free(buf->buffer);
-    free(buf);
+    destroy_curl_buffer(buf);
     free(url);
     return lyric;
 }

@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+void destroy_curl_buffer(curl_buffer *buf) {
+    free(buf->buffer);
+    free(buf);
+}
+
 size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
     size_t size = sz * nmemb; // sz is the width of the byte, nmemb is the # of bytes
     curl_buffer *cbuf = (curl_buffer *) context;
