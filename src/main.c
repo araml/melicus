@@ -54,6 +54,8 @@ char *make_song_url(char *song_name) {
     memcpy(url + length(prefix), song_name, length(song_name));
     memcpy(url + length(prefix) + length(song_name), postfix, length(postfix));
     printf("URL: %s\n", url);
+
+    free(song_name);
     return url;
 }
 
@@ -81,6 +83,12 @@ int main(int argc, char *argv[]) {
     //printf("%s", buf->buffer);
     curl_easy_cleanup(handle);
 
+    char *tmp = realloc(buf->buffer, buf->size + 1);
+    if (tmp) {
+        buf->buffer = tmp;
+        buf->size += 1;
+    }
+    buf->buffer[buf->size - 1] = '\0';
     char *lyric = get_lyrics_from_page_string(buf->buffer);
     printf("Lyric: \n%s\n", lyric);
 

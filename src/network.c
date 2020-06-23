@@ -8,7 +8,6 @@ size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
     char *tmp = realloc(cbuf->buffer, cbuf->size + size);
     if (!tmp) {
         // Bad realloc
-
     }
 
     memset(tmp + cbuf->size, 0, size);

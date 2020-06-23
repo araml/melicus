@@ -94,6 +94,7 @@ int center_text(int text_width, int term_width) {
 char *get_lyrics_from_page_string(const char *page_string) {
     char opening_div[] = "<div class=\"holder lyric-box\">";
     size_t idx = find_in_string(page_string, opening_div);
+    idx += length(opening_div);
 
     char *lyrics = calloc(1, 1);
     size_t k = 0;
