@@ -98,14 +98,14 @@ string_split* get_cmus_status() {
 
 song_data *get_current_song() {
     string_split *ss = get_cmus_status();
-    if (ss->used_size == 0) {
+    if (ss->size == 0) {
         return NULL;
     }
 
     song_data *s = (song_data *)malloc(sizeof(song_data));
     memset(s, 0, sizeof(song_data));
 
-    for (size_t i = 0; i < ss->used_size; i++) {
+    for (size_t i = 0; i < ss->size; i++) {
         if_substring_fill(&(s->album), album, ss->strings[i]);
         if_substring_fill(&(s->song_name), song_title, ss->strings[i]);
         if_substring_fill(&(s->artist_name), artist, ss->strings[i]);

@@ -5,7 +5,7 @@
 
 typedef struct {
     char **strings;
-    size_t used_size;
+    size_t size;
     size_t reserved_size;
 } string_split ;
 

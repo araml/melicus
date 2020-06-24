@@ -27,11 +27,11 @@ size_t get_size_until_next_smybol(const char *s, size_t index, char c) {
 string_split *create_string_string_split(const char *s, char c) {
     string_split *ss = (string_split *)(malloc(sizeof(string_split)));
     ss->strings = (char **)malloc(sizeof(char *) * 1);
-    ss->used_size = 0;
+    ss->size = 0;
     ss->reserved_size = 1;
 
     for (size_t i = 0; i < length(s); i++) {
-        if (ss->used_size == ss->reserved_size) {
+        if (ss->size == ss->reserved_size) {
             char **tmp = (char **)realloc(ss->strings,
                                           sizeof(char *) *
                                           (ss->reserved_size *= 2));
@@ -43,13 +43,13 @@ string_split *create_string_string_split(const char *s, char c) {
         size_t sz = get_size_until_next_smybol(s, i, c);
         if (sz == 0)
             continue;
-        ss->strings[ss->used_size] = (char *)malloc(sz + 1);
-        memset(ss->strings[ss->used_size], '\0', sz + 1);
+        ss->strings[ss->size] = (char *)malloc(sz + 1);
+        memset(ss->strings[ss->size], '\0', sz + 1);
         for (size_t k = i; i < length(s) && s[i] != c; i++) {
-            ss->strings[ss->used_size][i - k] = s[i];
+            ss->strings[ss->size][i - k] = s[i];
         }
 
-        ss->used_size++;
+        ss->size++;
     }
 
     return ss;
@@ -59,7 +59,7 @@ int add_to_string_split(string_split *ss, const char *s) {
     if (!s)  // NULL string
         return -1;
 
-    if (ss->used_size == ss->reserved_size) {
+    if (ss->size == ss->reserved_size) {
         char **tmp = (char **)realloc(ss->strings,
                                       sizeof(char *) *
                                       (ss->reserved_size *= 2));
@@ -68,18 +68,18 @@ int add_to_string_split(string_split *ss, const char *s) {
         else return -1;
     }
 
-    ss->strings[ss->used_size] = (char *)malloc(length(s) + 1);
-    memset(ss->strings[ss->used_size], '\0', length(s) + 1);
+    ss->strings[ss->size] = (char *)malloc(length(s) + 1);
+    memset(ss->strings[ss->size], '\0', length(s) + 1);
     for (size_t i = 0; i < length(s); i++) {
-        ss->strings[ss->used_size][i] = s[i];
+        ss->strings[ss->size][i] = s[i];
     }
 
-    ss->used_size++;
+    ss->size++;
     return 0;
 }
 
 void destroy_string_split(string_split *ss) {
-    for (size_t i = 0; i < ss->used_size; i++)
+    for (size_t i = 0; i < ss->size; i++)
         free(ss->strings[i]);
     free(ss->strings);
     free(ss);

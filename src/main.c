@@ -6,8 +6,11 @@
 #include <string.h>
 #include <network.h>
 #include <song_data.h>
+#include <sched.h>
+#include <sys/ioctl.h>
 
 song_data *current_song;
+string_split *current_song_lyrics;
 
 char *make_song_url(char *song_name) {
     if (!song_name)
@@ -84,6 +87,7 @@ char *find_link_for_song(char *page, song_data *s) {
     if (idx == (size_t) - 1) // The song is not found
         return NULL;
 
+    printf("Song name: %s\n", s->song_name);
     idx = idx - reverse_find(page + idx, s->song_name, idx);
     if (idx == (size_t) - 1)
         return NULL;
@@ -130,23 +134,116 @@ char *get_lyrics(song_data *s) {
     return lyric;
 }
 
+int add_to_string(char **s, char c) {
+    if (*s == NULL) {
+        *s = (char *)malloc(2);
+        (*s)[1] = '\0';
+    } else {
+        char *tmp = realloc(*s, length(*s) + 2);
+        if (tmp)
+            *s = tmp;
+        else
+            return -1;
+        size_t s_length = length(*s);
+        (*s)[s_length] = c;
+        (*s)[s_length + 1] = '\0';
+    }
+
+    return 0;
+}
+
+string_split* create_string_ssplit() {
+    string_split *r = malloc(sizeof(string_split));
+    r->strings = NULL;
+    r->size = 0;
+    r->reserved_size = 0;
+    return r;
+}
+
+int push_to_string_split(string_split *sv, char *line) {
+    if (sv->reserved_size == 0) {
+        sv->strings = (char **)malloc(sizeof(char *));
+        sv->reserved_size = 1;
+    } else if (sv->size == sv->reserved_size) {
+        char **tmp = (char **)realloc(sv->strings, sizeof(char *) *
+                                      (sv->reserved_size *= 2));
+        if (tmp) {
+            sv->strings = tmp;
+        } else {
+            return -1;
+        }
+    }
+
+    sv->strings[sv->size++] = line;
+    return 0;
+}
+
+string_split *clean_lyrics(char *lyrics) {
+    string_split *sv = create_string_ssplit();
+    char *line = NULL;
+    for (size_t i = 0; i < length(lyrics); i++) {
+        // </br>
+        if (lyrics[i]     == '<' && lyrics[i + 1] == 'b' &&
+            lyrics[i + 2] == 'r' && lyrics[i + 3] == '/' && lyrics[i + 4] == '>') {
+            i += 4;
+            push_to_string_split(sv, line);
+            line = NULL;
+            continue;
+        }
+
+        add_to_string(&line, lyrics[i]);
+    }
+    return sv;
+}
+
+string_split *no_lyrics() {
+    return NULL;
+}
+
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
     current_song = NULL;
+    current_song_lyrics = NULL;
+    //string_split *l = NULL;
 
-    // Get current song data
-    song_data *s = get_current_song();
+    //initscr();
+    struct winsize max;
+    ioctl(1, TIOCGWINSZ, &max);
+    size_t idx = 0;
+    while (true) {
+        song_data *s = get_current_song();
+        printf("Current: %s\n", s->song_name);
 
-    if (s)
-        printf("Artist: %s\nAlbum: %s\nSong: %s\n", s->artist_name, s->album, s->song_name);
+        if (!current_song ||
+            (current_song->song_name == s->song_name &&
+             current_song->artist_name == s->artist_name)) {
+            current_song = s;
+            char *lyrics = get_lyrics(s);
 
-    char *lyric = get_lyrics(s);
-    printf("Lyric: \n%s\n", lyric);
+            free(current_song_lyrics);
+            current_song_lyrics = clean_lyrics(lyrics);
+            free(lyrics);
+        } else {
+            sched_yield();
+        }
 
+      /*  if (current_song_lyrics) {
+            mvprintw(0, center_text(length(current_song->artist_name), max.ws_col),
+                    "%s", current_song->artist_name);
+            mvprintw(1, center_text(length(current_song->album), max.ws_col),
+                    "%s", current_song->album);
+            mvprintw(2, center_text(length(current_song->song_name), max.ws_col),
+                    "%s", current_song->song_name);
+            for (size_t i = 4, k = 0; i < max.ws_row - 1; i++, k++) {
+                size_t pos = center_text(length(current_song_lyrics->strings[k + idx]), max.ws_col);
+                mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
+            }
+        }*/
+    }
 
-    free(lyric);
-    destroy_song_data(s);
+    free(current_song_lyrics);
+    destroy_song_data(current_song);
     return 0;
 }
 
