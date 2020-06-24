@@ -3,6 +3,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 
 #include <cmus_status.h>
 #include <song_data.h>
@@ -25,6 +26,7 @@ int realloc_wrapper(char **ptr, size_t size) {
 
     return 0;
 }
+int nforks = 0;
 
 int get_line(int fd, char **sline) {
     size_t reserved_size = 1;
@@ -92,6 +94,9 @@ string_split* get_cmus_status() {
             add_to_string_split(ss, line);
             free(line);
         }
+        waitpid(pid, NULL, 0);
+        close(pipe_fd[0]);
+        usleep(10000);
         return ss;
     }
 }

@@ -137,6 +137,7 @@ char *get_lyrics(song_data *s) {
 int add_to_string(char **s, char c) {
     if (*s == NULL) {
         *s = (char *)malloc(2);
+        (*s)[0] = c;
         (*s)[1] = '\0';
     } else {
         char *tmp = realloc(*s, length(*s) + 2);
@@ -183,6 +184,8 @@ string_split *clean_lyrics(char *lyrics) {
     char *line = NULL;
     for (size_t i = 0; i < length(lyrics); i++) {
         // </br>
+        if (lyrics[i] == '\t' || lyrics[i] == '\n')
+            continue;
         if (lyrics[i]     == '<' && lyrics[i + 1] == 'b' &&
             lyrics[i + 2] == 'r' && lyrics[i + 3] == '/' && lyrics[i + 4] == '>') {
             i += 4;
@@ -213,16 +216,29 @@ int main(int argc, char *argv[]) {
     size_t idx = 0;
     while (true) {
         song_data *s = get_current_song();
-        printf("Current: %s\n", s->song_name);
+        if (s && current_song) {
+            printf("Current: %s\n", s->song_name);
+            printf("Saved song: %s\n", current_song->song_name);
+        }
 
-        if (!current_song ||
-            (current_song->song_name == s->song_name &&
-             current_song->artist_name == s->artist_name)) {
+        if (s && (!current_song ||
+            (current_song->song_name != s->song_name &&
+             current_song->artist_name != s->artist_name))) {
+            printf("Q onda?");
             current_song = s;
             char *lyrics = get_lyrics(s);
 
+            //printf("%s\n", lyrics);
             free(current_song_lyrics);
             current_song_lyrics = clean_lyrics(lyrics);
+            /*
+            for (size_t i = 0; i < current_song_lyrics->size; i++) {
+                if (current_song_lyrics->strings[i])
+                    printf("%s\n", current_song_lyrics->strings[i]);
+                else
+                    printf("\n");
+            }*/
+
             free(lyrics);
         } else {
             sched_yield();
