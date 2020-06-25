@@ -5,14 +5,14 @@ FLAGS=-std=c11 -ggdb
 LIBS= -lcurl -lncurses
 INCLUDE=-Isrc/
 
-.PHONY: main
-release: main
+.PHONY: melicus
+all: melicus
 fuzz: main_fuzz
 string: string_utils
 string_search: string_search_test
 
-main:
-	$(CC) src/main.c src/lyrics.c src/cmus_status.c src/string_utils.c src/network.c src/song_data.c $(LIBS) $(FLAGS) $(INCLUDE) -o build/main
+melicus:
+	$(CC) src/main.c src/lyrics.c src/cmus_status.c src/string_utils.c src/network.c src/song_data.c $(LIBS) $(FLAGS) $(INCLUDE) -o build/melicus
 
 main_fuzz:
 	$(FUZZ_CC) tests/test.c src/lyrics.c -lncurses $(FLAGS) $(INCLUDE) -o build/main_fuzzable

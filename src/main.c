@@ -15,6 +15,7 @@
 song_data *current_song;
 string_split *current_song_lyrics;
 
+// TODO: Proper log function
 #define LOG(...)
 
 char *make_song_url(char *song_name) {
@@ -84,11 +85,10 @@ curl_buffer *get_page(char *url) {
 }
 
 char *find_link_for_song(char *page, song_data *s) {
-    char *link = (char *)malloc(256); // No link (at least for SM) is longer than 256.
-    memset(link, 0, 256);
     size_t idx = find_in_string(page, s->artist_name);
-    if (idx == (size_t) - 1) // The song is not found
+    if (idx == (size_t) - 1) { // The song is not found
         return NULL;
+    }
 
     idx = idx - reverse_find(page + idx, s->song_name, idx);
     if (idx == (size_t) - 1)
@@ -98,6 +98,9 @@ char *find_link_for_song(char *page, song_data *s) {
     idx = idx + length(url_delim) - reverse_find(page + idx, url_delim, idx);
     if (idx == (size_t) - 1)
         return NULL;
+
+    char *link = (char *)malloc(256); // No link (at least for SM) is longer than 256.
+    memset(link, 0, 256);
 
     for (size_t i = 0; i < 256 && page[idx + i] != '"'; i++) {
         link[i + 6] = page[idx + i];
@@ -124,6 +127,7 @@ char *get_lyrics(song_data *s) {
     // to it in the HTML
     if (!lyric) {
         char *link = find_link_for_song(buf->buffer, s);
+        free(lyric);
         destroy_curl_buffer(buf);
         buf = get_page(link);
         lyric = get_lyrics_from_page_string(buf->buffer);
@@ -185,7 +189,7 @@ string_split *clean_lyrics(char *lyrics) {
     char *line = NULL;
     for (size_t i = 0; i < length(lyrics); i++) {
         // </br>
-        if (lyrics[i] == '\t' || lyrics[i] == '\n')
+        if (lyrics[i] == '\t' || lyrics[i] == '\n' || lyrics[i] == '\r')
             continue;
         if (lyrics[i]     == '<' && lyrics[i + 1] == 'b' &&
             lyrics[i + 2] == 'r' && lyrics[i + 3] == '/' && lyrics[i + 4] == '>') {
@@ -233,8 +237,11 @@ int main(int argc, char *argv[]) {
 
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);
+    LOG("Screen size %d %d\n", max.ws_row, max.ws_col);
     initscr();
     nodelay(stdscr, true);
+    curs_set(0);
+
     bool refresh_screen = false;
     size_t idx = 0;
     while (true) {
@@ -243,19 +250,14 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (current_song && s) {
-            LOG("Old %s\n", current_song->song_name);
-            LOG("New %s\n", s->song_name);
-            LOG("Equal? %d\n", new_song(current_song, s));
-        }
-
         if (!current_song || new_song(current_song, s)) {
             current_song = s;
             char *lyrics = get_lyrics(s);
 
             LOG("Old song: %s\n", current_song->song_name);
 
-            free(current_song_lyrics);
+            if (current_song_lyrics)
+                destroy_string_split(current_song_lyrics);
             current_song_lyrics = clean_lyrics(lyrics);
             LOG("New song: %s\n", current_song->song_name);
             refresh_screen = true;
@@ -276,6 +278,8 @@ int main(int argc, char *argv[]) {
                     current_song_lyrics->size; i++, k++) {
                 if (current_song_lyrics->strings[k + idx]) {
                     size_t pos = center_text(length(current_song_lyrics->strings[k + idx]), max.ws_col);
+                    LOG("Pos: %zu\n", pos);
+                    LOG("Length: %zu\n", length(current_song_lyrics->strings[k + idx]));
                     LOG("%s\n", current_song_lyrics->strings[k + idx]);
                     mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
                 }
@@ -292,7 +296,7 @@ int main(int argc, char *argv[]) {
     }
 
     endwin();
-    free(current_song_lyrics);
+    destroy_string_split(current_song_lyrics);
     destroy_song_data(current_song);
     return 0;
 }
