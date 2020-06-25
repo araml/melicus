@@ -15,11 +15,12 @@
 song_data *current_song;
 string_split *current_song_lyrics;
 
+#define LOG(...)
+
 char *make_song_url(char *song_name) {
     if (!song_name)
         return NULL;
 
-    // FIXME: add %20 not %
     size_t length_url = 0;
     size_t spaces = 0;
     for (size_t i = 0; i <= length(song_name); i++) {
@@ -31,7 +32,7 @@ char *make_song_url(char *song_name) {
         }
     }
 
-    printf("String length: %zu\nNumber of spaces: %zu\nNew length: %zu\n",
+    LOG("String length: %zu\nNumber of spaces: %zu\nNew length: %zu\n",
             length(song_name), spaces, length_url);
 
     char *tmp_song_name = (char *)malloc(length_url + 1);
@@ -59,7 +60,7 @@ char *make_song_url(char *song_name) {
     memcpy(url, prefix, length(prefix));
     memcpy(url + length(prefix), song_name, length(song_name));
     memcpy(url + length(prefix) + length(song_name), postfix, length(postfix));
-    printf("URL: %s\n", url);
+    LOG("URL: %s\n", url);
 
     free(song_name);
     return url;
@@ -109,7 +110,7 @@ char *find_link_for_song(char *page, song_data *s) {
     link[4] = 's';
     link[5] = ':';
 
-    printf("Link %s\n", link);
+    LOG("Link %s\n", link);
     return link;
 }
 
@@ -215,6 +216,14 @@ bool string_cmp(char *s1, char *s2) {
     return true;
 }
 
+bool new_song(song_data *old_song, song_data *new_song) {
+    // Asume no two album names are equal
+    bool song_eq = string_cmp(old_song->song_name, new_song->song_name);
+    bool artist_eq = string_cmp(old_song->artist_name, new_song->artist_name);
+    return (song_eq && !artist_eq) || !song_eq;
+
+}
+
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
@@ -224,8 +233,8 @@ int main(int argc, char *argv[]) {
 
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);
-    //initscr();
-    //nodelay(stdscr, true);
+    initscr();
+    nodelay(stdscr, true);
     bool refresh_screen = false;
     size_t idx = 0;
     while (true) {
@@ -234,14 +243,21 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (!current_song ||
-            (!string_cmp(current_song->song_name, s->song_name) &&
-             !string_cmp(current_song->artist_name, s->artist_name))) {
+        if (current_song && s) {
+            LOG("Old %s\n", current_song->song_name);
+            LOG("New %s\n", s->song_name);
+            LOG("Equal? %d\n", new_song(current_song, s));
+        }
+
+        if (!current_song || new_song(current_song, s)) {
             current_song = s;
             char *lyrics = get_lyrics(s);
 
+            LOG("Old song: %s\n", current_song->song_name);
+
             free(current_song_lyrics);
             current_song_lyrics = clean_lyrics(lyrics);
+            LOG("New song: %s\n", current_song->song_name);
             refresh_screen = true;
             free(lyrics);
         } else {
@@ -249,22 +265,23 @@ int main(int argc, char *argv[]) {
         }
 
         if (current_song_lyrics && refresh_screen) {
-            /*mvprintw(0, center_text(length(current_song->artist_name), max.ws_col),
+            wclear(stdscr);
+            mvprintw(0, center_text(length(current_song->artist_name), max.ws_col),
                     "%s", current_song->artist_name);
             mvprintw(1, center_text(length(current_song->album), max.ws_col),
                     "%s", current_song->album);
             mvprintw(2, center_text(length(current_song->song_name), max.ws_col),
                     "%s", current_song->song_name);
-            */ for (size_t i = 4, k = 0; i < max.ws_row - 1 && k <
+            for (size_t i = 4, k = 0; i < max.ws_row - 1 && k <
                     current_song_lyrics->size; i++, k++) {
                 if (current_song_lyrics->strings[k + idx]) {
                     size_t pos = center_text(length(current_song_lyrics->strings[k + idx]), max.ws_col);
-                    printf("%s\n", current_song_lyrics->strings[k + idx]);
-                    //mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
+                    LOG("%s\n", current_song_lyrics->strings[k + idx]);
+                    mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
                 }
             }
             refresh_screen = false;
-            //wrefresh(stdscr);
+            wrefresh(stdscr);
         }
 
         if (getch() == 'q') {
