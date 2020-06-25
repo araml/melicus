@@ -1,13 +1,16 @@
+#define _XOPEN_SOURCE 500
 #include <ncurses.h>
 
 #include <lyrics.h>
 #include <cmus_status.h>
 #include <string_utils.h>
+
 #include <string.h>
 #include <network.h>
 #include <song_data.h>
 #include <sched.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 song_data *current_song;
 string_split *current_song_lyrics;
@@ -82,12 +85,10 @@ curl_buffer *get_page(char *url) {
 char *find_link_for_song(char *page, song_data *s) {
     char *link = (char *)malloc(256); // No link (at least for SM) is longer than 256.
     memset(link, 0, 256);
-    printf("Artist name: %s\n", s->artist_name);
     size_t idx = find_in_string(page, s->artist_name);
     if (idx == (size_t) - 1) // The song is not found
         return NULL;
 
-    printf("Song name: %s\n", s->song_name);
     idx = idx - reverse_find(page + idx, s->song_name, idx);
     if (idx == (size_t) - 1)
         return NULL;
@@ -108,8 +109,7 @@ char *find_link_for_song(char *page, song_data *s) {
     link[4] = 's';
     link[5] = ':';
 
-    printf("Link: %s\n", link);
-
+    printf("Link %s\n", link);
     return link;
 }
 
@@ -203,6 +203,18 @@ string_split *no_lyrics() {
     return NULL;
 }
 
+bool string_cmp(char *s1, char *s2) {
+    if (!s1 || !s2)
+        return false;
+
+    while (*s1 != '\0' && *s2 != '\0') {
+        if (*(s1++) != *(s2++))
+            return false;
+    }
+
+    return true;
+}
+
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
@@ -210,54 +222,59 @@ int main(int argc, char *argv[]) {
     current_song_lyrics = NULL;
     //string_split *l = NULL;
 
-    //initscr();
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);
+    //initscr();
+    //nodelay(stdscr, true);
+    bool refresh_screen = false;
     size_t idx = 0;
     while (true) {
         song_data *s = get_current_song();
-        if (s && current_song) {
-            printf("Current: %s\n", s->song_name);
-            printf("Saved song: %s\n", current_song->song_name);
+        if (!s) {
+            continue;
         }
 
-        if (s && (!current_song ||
-            (current_song->song_name != s->song_name &&
-             current_song->artist_name != s->artist_name))) {
-            printf("Q onda?");
+        if (!current_song ||
+            (!string_cmp(current_song->song_name, s->song_name) &&
+             !string_cmp(current_song->artist_name, s->artist_name))) {
             current_song = s;
             char *lyrics = get_lyrics(s);
 
-            //printf("%s\n", lyrics);
             free(current_song_lyrics);
             current_song_lyrics = clean_lyrics(lyrics);
-            /*
-            for (size_t i = 0; i < current_song_lyrics->size; i++) {
-                if (current_song_lyrics->strings[i])
-                    printf("%s\n", current_song_lyrics->strings[i]);
-                else
-                    printf("\n");
-            }*/
-
+            refresh_screen = true;
             free(lyrics);
         } else {
             sched_yield();
         }
 
-      /*  if (current_song_lyrics) {
-            mvprintw(0, center_text(length(current_song->artist_name), max.ws_col),
+        if (current_song_lyrics && refresh_screen) {
+            /*mvprintw(0, center_text(length(current_song->artist_name), max.ws_col),
                     "%s", current_song->artist_name);
             mvprintw(1, center_text(length(current_song->album), max.ws_col),
                     "%s", current_song->album);
             mvprintw(2, center_text(length(current_song->song_name), max.ws_col),
                     "%s", current_song->song_name);
-            for (size_t i = 4, k = 0; i < max.ws_row - 1; i++, k++) {
-                size_t pos = center_text(length(current_song_lyrics->strings[k + idx]), max.ws_col);
-                mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
+            */ for (size_t i = 4, k = 0; i < max.ws_row - 1 && k <
+                    current_song_lyrics->size; i++, k++) {
+                if (current_song_lyrics->strings[k + idx]) {
+                    size_t pos = center_text(length(current_song_lyrics->strings[k + idx]), max.ws_col);
+                    printf("%s\n", current_song_lyrics->strings[k + idx]);
+                    //mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
+                }
             }
-        }*/
+            refresh_screen = false;
+            //wrefresh(stdscr);
+        }
+
+        if (getch() == 'q') {
+            break;
+        }
+
+        usleep(10000);
     }
 
+    endwin();
     free(current_song_lyrics);
     destroy_song_data(current_song);
     return 0;
