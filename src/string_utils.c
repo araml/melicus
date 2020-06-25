@@ -155,3 +155,15 @@ size_t reverse_find(char *text, char *word, size_t text_length) {
     }
     return 0;
 }
+
+bool string_cmp(char *s1, char *s2) {
+    if (!s1 || !s2)
+        return false;
+
+    while (*s1 != '\0' && *s2 != '\0') {
+        if (*(s1++) != *(s2++))
+            return false;
+    }
+
+    return true;
+}

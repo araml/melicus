@@ -208,18 +208,6 @@ string_split *no_lyrics() {
     return NULL;
 }
 
-bool string_cmp(char *s1, char *s2) {
-    if (!s1 || !s2)
-        return false;
-
-    while (*s1 != '\0' && *s2 != '\0') {
-        if (*(s1++) != *(s2++))
-            return false;
-    }
-
-    return true;
-}
-
 bool new_song(song_data *old_song, song_data *new_song) {
     // Asume no two album names are equal
     bool song_eq = string_cmp(old_song->song_name, new_song->song_name);
@@ -241,6 +229,7 @@ int main(int argc, char *argv[]) {
     initscr();
     nodelay(stdscr, true);
     curs_set(0);
+    noecho();
 
     bool refresh_screen = false;
     size_t idx = 0;
