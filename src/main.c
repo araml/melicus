@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE 500
+#define _GNU_SOURCE
 #include <ncurses.h>
 
 #include <lyrics.h>
@@ -12,13 +13,28 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <fcntl.h>
+#include <stdio.h>
+
 song_data *current_song;
 string_split *current_song_lyrics;
 
-// TODO: Proper log function
-#define LOG(...)
+void log_melicus(const char *format, ...) {
+    va_list arg;
+    int fd = open("melicus.log", O_CREAT | O_APPEND | O_WRONLY,
+                                 S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
+                                 S_IROTH | S_IWOTH);
+    va_start(arg, format);
+    vdprintf(fd, format, arg);
+    va_end(arg);
+}
 
-char *make_song_url(char *song_name) {
+// TODO: Proper log function
+#define LOG(...) log_melicus(__VA_ARGS__)
+
+char *make_song_url(song_data *data) {
+    char *song_name = data->song_name;
+    char *artist_name = data->artist_name;
     if (!song_name)
         return NULL;
 
@@ -39,6 +55,8 @@ char *make_song_url(char *song_name) {
     char *tmp_song_name = (char *)malloc(length_url + 1);
     memset(tmp_song_name, 0, length_url + 1);
 
+    // TODO: do this for the artist name
+    // TODO 2: refactor this into its own function in networking
     for (size_t i = 0, k = 0; i <= length(song_name); i++) {
         if (song_name[i] == ' ') {
             tmp_song_name[k] = '%';
@@ -53,14 +71,21 @@ char *make_song_url(char *song_name) {
 
     song_name = tmp_song_name;
 
-    char prefix[] = "https://songmeanings.com/query/?query=";
+    // TODO: refactor this shitty string concat lol
+    char prefix[] = "https://songmeanings.com/query/?query=%20";
+    char space[] = "%20";
     char postfix[] = "&type=songtitles";
-    size_t url_length = length(prefix) + length(postfix) + length(song_name) + 1;
+    size_t url_length = length(prefix) + length(postfix) + length(song_name) +
+                        length(artist_name) + length(space) + 1;
     char *url = (char *)malloc(url_length);
     memset(url, 0, url_length);
     memcpy(url, prefix, length(prefix));
     memcpy(url + length(prefix), song_name, length(song_name));
-    memcpy(url + length(prefix) + length(song_name), postfix, length(postfix));
+    memcpy(url + length(prefix) + length(song_name), space, length(space));
+    memcpy(url + length(prefix) + length(song_name) + length(space),
+           artist_name, length(artist_name));
+    memcpy(url + length(prefix) + length(song_name) + length(space) +
+           length(artist_name), postfix, length(postfix));
     LOG("URL: %s\n", url);
 
     free(song_name);
@@ -120,7 +145,7 @@ char *find_link_for_song(char *page, song_data *s) {
 
 char *get_lyrics(song_data *s) {
     // create song URL
-    char *url = make_song_url(s->song_name);
+    char *url = make_song_url(s);
     curl_buffer *buf = get_page(url);
     char *lyric = get_lyrics_from_page_string(buf->buffer);
     // If lyric is null then we didn't find the song so we have to find the link
