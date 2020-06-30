@@ -32,44 +32,71 @@ void log_melicus(const char *format, ...) {
 // TODO: Proper log function
 #define LOG(...) log_melicus(__VA_ARGS__)
 
-char *make_song_url(song_data *data) {
-    char *song_name = data->song_name;
-    char *artist_name = data->artist_name;
-    if (!song_name)
-        return NULL;
+char *copy_string(char *s1) {
+    char *tmp = (char *)malloc(length(s1) + 1);
+    memcpy(tmp, s1, length(s1) + 1);
+    return tmp;
+}
 
+int add_to_string(char **s1, char *s2) {
+    if (!s2)
+        return -1;
+
+    if (!(*s1)) {
+        *s1 = malloc(length(s2) + 1);
+        memcpy(*s1, s2, length(s2) + 1);
+    } else {
+        size_t l = length(*s1);
+        char *tmp = realloc(*s1, l + length(s2) + 1);
+        if (tmp) {
+            *s1 = tmp;
+            memcpy(*s1 + l, s2, length(s2) + 1);
+        } else {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+char *replace_spaces_with_html_spaces(char *url) {
     size_t length_url = 0;
-    size_t spaces = 0;
-    for (size_t i = 0; i <= length(song_name); i++) {
-        if (song_name[i] == ' ') {
+    for (size_t i = 0; i <= length(url); i++) {
+        if (url[i] == ' ') {
             length_url += 3;
-            spaces++;
         } else {
             length_url++;
         }
     }
 
-    LOG("String length: %zu\nNumber of spaces: %zu\nNew length: %zu\n",
-            length(song_name), spaces, length_url);
+    LOG("String length: %zu\nNew length: %zu\n",
+            length(url), length_url);
 
-    char *tmp_song_name = (char *)malloc(length_url + 1);
-    memset(tmp_song_name, 0, length_url + 1);
+    char *tmp_url = (char *)malloc(length_url + 1);
+    memset(tmp_url, 0, length_url + 1);
 
     // TODO: do this for the artist name
     // TODO 2: refactor this into its own function in networking
-    for (size_t i = 0, k = 0; i <= length(song_name); i++) {
-        if (song_name[i] == ' ') {
-            tmp_song_name[k] = '%';
-            tmp_song_name[k + 1] = '2';
-            tmp_song_name[k + 2] = '2';
+    for (size_t i = 0, k = 0; i <= length(url); i++) {
+        if (url[i] == ' ') {
+            tmp_url[k] = '%';
+            tmp_url[k + 1] = '2';
+            tmp_url[k + 2] = '2';
             k += 3;
         } else {
-            tmp_song_name[k] = song_name[i];
+            tmp_url[k] = url[i];
             k++;
         }
     }
 
-    song_name = tmp_song_name;
+    return tmp_url;
+}
+
+char *make_song_url(song_data *data) {
+    if (!data->song_name)
+        return NULL;
+
+    char *song_name = replace_spaces_with_html_spaces(data->song_name);
     //TODO: add musixmatch backend
     //https://www.musixmatch.com/lyrics/Band-Name/Song-Name
 
@@ -78,17 +105,18 @@ char *make_song_url(song_data *data) {
     char prefix[] = "https://songmeanings.com/query/?query=%20";
     char space[] = "%20";
     char postfix[] = "&type=songtitles";
-    size_t url_length = length(prefix) + length(postfix) + length(song_name) +
-                        length(artist_name) + length(space) + 1;
-    char *url = (char *)malloc(url_length);
-    memset(url, 0, url_length);
-    memcpy(url, prefix, length(prefix));
-    memcpy(url + length(prefix), song_name, length(song_name));
-    memcpy(url + length(prefix) + length(song_name), space, length(space));
-    memcpy(url + length(prefix) + length(song_name) + length(space),
-           artist_name, length(artist_name));
-    memcpy(url + length(prefix) + length(song_name) + length(space) +
-           length(artist_name), postfix, length(postfix));
+
+    char *url = NULL;
+    add_to_string(&url, prefix);
+    add_to_string(&url, song_name);
+    add_to_string(&url, space);
+    if (data->artist_name) {
+        char *artist_name = replace_spaces_with_html_spaces(data->artist_name);
+        add_to_string(&url, artist_name);
+        free(artist_name);
+    }
+    add_to_string(&url, postfix);
+
     LOG("URL: %s\n", url);
 
     free(song_name);
@@ -179,7 +207,7 @@ char *get_lyrics(song_data *s) {
     return lyric;
 }
 
-int add_to_string(char **s, char c) {
+int add_char_to_string(char **s, char c) {
     if (*s == NULL) {
         *s = (char *)malloc(2);
         (*s)[0] = c;
@@ -239,7 +267,7 @@ string_split *clean_lyrics(char *lyrics) {
             continue;
         }
 
-        add_to_string(&line, lyrics[i]);
+        add_char_to_string(&line, lyrics[i]);
     }
     return sv;
 }
