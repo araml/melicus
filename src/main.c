@@ -70,6 +70,9 @@ char *make_song_url(song_data *data) {
     }
 
     song_name = tmp_song_name;
+    //TODO: add musixmatch backend
+    //https://www.musixmatch.com/lyrics/Band-Name/Song-Name
+
 
     // TODO: refactor this shitty string concat lol
     char prefix[] = "https://songmeanings.com/query/?query=%20";
@@ -110,7 +113,19 @@ curl_buffer *get_page(char *url) {
 }
 
 char *find_link_for_song(char *page, song_data *s) {
-    size_t idx = find_in_string(page, s->artist_name);
+    //LOG("%s", page);
+    char prefix_find_artist[] = "title=\"";
+    char jjj = '"';
+    char *find_artist_name = (char *)malloc(length(prefix_find_artist) +
+                                            length(s->artist_name) + 2);
+    memset(find_artist_name, 0, length(prefix_find_artist) + length(s->artist_name) + 2);
+    memcpy(find_artist_name, prefix_find_artist, length(prefix_find_artist));
+    memcpy(find_artist_name + length(prefix_find_artist), s->artist_name, length(s->artist_name));
+    memcpy(find_artist_name + length(prefix_find_artist) + length(s->artist_name), &jjj, 1);
+
+    LOG("Find artist name: %s\n", find_artist_name);
+
+    size_t idx = find_in_string(page, find_artist_name);
     if (idx == (size_t) - 1) { // The song is not found
         return NULL;
     }
