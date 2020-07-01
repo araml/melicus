@@ -171,7 +171,7 @@ bool string_cmp(char *s1, char *s2) {
 }
 
 int realloc_wrapper(char **ptr, size_t size) {
-    char *tmp = realloc(*ptr, size);
+    char *tmp = (char *)realloc(*ptr, size);
     if (tmp == NULL)
         return -1;
 
@@ -222,4 +222,44 @@ int get_line(int fd, char **sline) {
         (*sline)[used_size] = c;
         used_size++;
     }
+}
+
+int add_to_string(char **s1, char *s2) {
+    if (!s2)
+        return -1;
+
+    if (!(*s1)) {
+        *s1 = (char *)malloc(length(s2) + 1);
+        memcpy(*s1, s2, length(s2) + 1);
+    } else {
+        size_t l = length(*s1);
+        char *tmp = (char *)realloc(*s1, l + length(s2) + 1);
+        if (tmp) {
+            *s1 = tmp;
+            memcpy(*s1 + l, s2, length(s2) + 1);
+        } else {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int add_char_to_string(char **s, char c) {
+    if (*s == NULL) {
+        *s = (char *)malloc(2);
+        (*s)[0] = c;
+        (*s)[1] = '\0';
+    } else {
+        char *tmp = (char *)realloc(*s, length(*s) + 2);
+        if (tmp)
+            *s = tmp;
+        else
+            return -1;
+        size_t s_length = length(*s);
+        (*s)[s_length] = c;
+        (*s)[s_length + 1] = '\0';
+    }
+
+    return 0;
 }

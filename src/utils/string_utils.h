@@ -22,4 +22,7 @@ size_t reverse_find(char *text, char *word, size_t text_length);
 bool string_cmp(char *s1, char *s2);
 int get_line(int fd, char **sline);
 
+int add_to_string(char **s1, char *s2);
+int add_char_to_string(char **s, char c);
+
 #endif // STRING_UTILS_H

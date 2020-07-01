@@ -107,13 +107,13 @@ char *get_lyrics_from_page_string(const char *page_string) {
 
     idx += length(opening_div);
 
-    char *lyrics = calloc(1, 1);
+    char *lyrics = (char *)calloc(1, 1);
     size_t k = 0;
     size_t lyrics_length = 1;
     size_t page_string_length = length(page_string);
     for (size_t i = idx; i < page_string_length; i++) {
         if (k >= lyrics_length) {
-            char *tmp = realloc(lyrics, lyrics_length *= 2);
+            char *tmp = (char *)realloc(lyrics, lyrics_length *= 2);
             if (tmp)
                 lyrics = tmp;
         }

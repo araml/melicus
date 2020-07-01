@@ -32,33 +32,6 @@ void log_melicus(const char *format, ...) {
 // TODO: Proper log function
 #define LOG(...) log_melicus(__VA_ARGS__)
 
-char *copy_string(char *s1) {
-    char *tmp = (char *)malloc(length(s1) + 1);
-    memcpy(tmp, s1, length(s1) + 1);
-    return tmp;
-}
-
-int add_to_string(char **s1, char *s2) {
-    if (!s2)
-        return -1;
-
-    if (!(*s1)) {
-        *s1 = malloc(length(s2) + 1);
-        memcpy(*s1, s2, length(s2) + 1);
-    } else {
-        size_t l = length(*s1);
-        char *tmp = realloc(*s1, l + length(s2) + 1);
-        if (tmp) {
-            *s1 = tmp;
-            memcpy(*s1 + l, s2, length(s2) + 1);
-        } else {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 char *replace_spaces_with_html_spaces(char *url) {
     size_t length_url = 0;
     for (size_t i = 0; i <= length(url); i++) {
@@ -131,7 +104,7 @@ curl_buffer *get_page(char *url) {
     curl_easy_perform(handle);
     curl_easy_cleanup(handle);
 
-    char *tmp = realloc(buf->buffer, buf->size + 1);
+    char *tmp = (char *)realloc(buf->buffer, buf->size + 1);
     if (tmp) {
         buf->buffer = tmp;
         buf->size += 1;
@@ -157,13 +130,20 @@ char *find_link_for_song(char *page, song_data *s) {
     if (idx == (size_t) - 1) { // The song is not found
         return NULL;
     }
+    LOG("Index is %zu %zu\n", idx, -1);
 
+    // FIXME: This == -1 check is wrong since reverse find will return 0
+    // when it doesn't finds the string
     idx = idx - reverse_find(page + idx, s->song_name, idx);
     if (idx == (size_t) - 1)
         return NULL;
 
+    LOG("Index is %zu %zu\n", idx, -1);
+
     char url_delim[] = "href=\"";
     idx = idx + length(url_delim) - reverse_find(page + idx, url_delim, idx);
+    // FIXME: same as the fixme above (this is *almost* never == -1, needs
+    // a ttmp idx to compare, and reverse_find should return -1 in that case
     if (idx == (size_t) - 1)
         return NULL;
 
@@ -207,27 +187,8 @@ char *get_lyrics(song_data *s) {
     return lyric;
 }
 
-int add_char_to_string(char **s, char c) {
-    if (*s == NULL) {
-        *s = (char *)malloc(2);
-        (*s)[0] = c;
-        (*s)[1] = '\0';
-    } else {
-        char *tmp = realloc(*s, length(*s) + 2);
-        if (tmp)
-            *s = tmp;
-        else
-            return -1;
-        size_t s_length = length(*s);
-        (*s)[s_length] = c;
-        (*s)[s_length + 1] = '\0';
-    }
-
-    return 0;
-}
-
 string_split* create_string_ssplit() {
-    string_split *r = malloc(sizeof(string_split));
+    string_split *r = (string_split *)malloc(sizeof(string_split));
     r->strings = NULL;
     r->size = 0;
     r->reserved_size = 0;

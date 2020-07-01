@@ -5,8 +5,6 @@
 #include <song_data.h>
 #include <string_utils.h>
 
-const char* cmus_status_path;
-
 int realloc_wrapper(char **ptr, size_t size);
 int get_line(int fd, char **sline);
 song_data *load_song_data_cmus(const char *path);

@@ -10,7 +10,7 @@ void destroy_curl_buffer(curl_buffer *buf) {
 size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
     size_t size = sz * nmemb; // sz is the width of the byte, nmemb is the # of bytes
     curl_buffer *cbuf = (curl_buffer *) context;
-    char *tmp = realloc(cbuf->buffer, cbuf->size + size);
+    char *tmp = (char *)realloc(cbuf->buffer, cbuf->size + size);
     if (!tmp) {
         // Bad realloc
     }
