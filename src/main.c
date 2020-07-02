@@ -1,36 +1,25 @@
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE
 #include <ncurses.h>
-
-#include <lyrics.h>
-#include <cmus_status.h>
-#include <string_utils.h>
-
-#include <string.h>
-#include <network.h>
-#include <song_data.h>
 #include <sched.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-
+#include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <locale.h>
+#include <langinfo.h>
+
+#include <log.h>
+#include <lyrics.h>
+#include <network.h>
+#include <song_data.h>
+#include <cmus_status.h>
+#include <string_utils.h>
+
 
 song_data *current_song;
 string_split *current_song_lyrics;
-
-void log_melicus(const char *format, ...) {
-    va_list arg;
-    int fd = open("melicus.log", O_CREAT | O_APPEND | O_WRONLY,
-                                 S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
-                                 S_IROTH | S_IWOTH);
-    va_start(arg, format);
-    vdprintf(fd, format, arg);
-    va_end(arg);
-}
-
-// TODO: Proper log function
-#define LOG(...) log_melicus(__VA_ARGS__)
 
 char *replace_spaces_with_html_spaces(char *url) {
     size_t length_url = 0;
@@ -255,6 +244,7 @@ int main(int argc, char *argv[]) {
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);
     LOG("Screen size %d %d\n", max.ws_row, max.ws_col);
+    setlocale(LC_ALL, "");
     initscr();
     nodelay(stdscr, true);
     curs_set(0);
@@ -299,7 +289,7 @@ int main(int argc, char *argv[]) {
                     LOG("Pos: %zu\n", pos);
                     LOG("Length: %zu\n", length(current_song_lyrics->strings[k + idx]));
                     LOG("%s\n", current_song_lyrics->strings[k + idx]);
-                    mvprintw(i, pos, "%s", current_song_lyrics->strings[k + idx]);
+                    mvaddstr(i, pos, current_song_lyrics->strings[k + idx]);
                 }
             }
             refresh_screen = false;

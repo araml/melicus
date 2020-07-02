@@ -4,12 +4,14 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <sys/wait.h>
+#include <stdio.h>
+#include <sys/types.h>
 
+#include <log.h>
 #include <cmus_status.h>
 #include <song_data.h>
 #include <string_utils.h>
 
-#include <stdio.h>
 
 const char *cmus_status_path = "/home/maek/cmus-status.txt";
 // CMUS Tags
@@ -19,18 +21,24 @@ const char song_title[] = "title";
 
 string_split* get_cmus_status() {
     int pipe_fd[2]; // Read from 0 write to 1
+    int pipe_err[2]; // Pipe to read stderr
     pipe(pipe_fd);
+    pipe(pipe_err);
 
     int pid = fork();
+
     if (pid == 0) {
         close(pipe_fd[0]);
+        close(pipe_err[0]);
         dup2(pipe_fd[1], STDOUT_FILENO);
+        dup2(pipe_err[1], STDERR_FILENO);
         char bin[] = "/usr/bin/cmus-remote";
         char *args[3] = {"cmus-remote", "-Q", NULL};
         execvp(bin, args);
         return NULL;
     } else {
         close(pipe_fd[1]);
+        close(pipe_err[1]);
         char *line = NULL;
 
         string_split *ss = create_string_string_split(NULL, '~');
@@ -39,8 +47,22 @@ string_split* get_cmus_status() {
             add_to_string_split(ss, line);
             free(line);
         }
+
+        // We didn't read nothing from stdout cmus is closed
+        if (ss->size == 0) {
+            while (true) {
+                ssize_t err  = get_line(pipe_err[0], &line);
+                if (err == 0 || err == -1) {
+                    break;
+                }
+                //LOG("Err %s\n", line);
+                free(line);
+            }
+        }
+
         waitpid(pid, NULL, 0);
         close(pipe_fd[0]);
+        close(pipe_err[0]);
         usleep(10000);
         return ss;
     }
