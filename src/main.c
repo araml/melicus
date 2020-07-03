@@ -276,18 +276,18 @@ int main(int argc, char *argv[]) {
 
         if (current_song_lyrics && refresh_screen) {
             wclear(stdscr);
-            mvprintw(0, center_text(length(current_song->artist_name), max.ws_col),
+            mvprintw(0, center_text(codepoints(current_song->artist_name), max.ws_col),
                     "%s", current_song->artist_name);
-            mvprintw(1, center_text(length(current_song->album), max.ws_col),
+            mvprintw(1, center_text(codepoints(current_song->album), max.ws_col),
                     "%s", current_song->album);
-            mvprintw(2, center_text(length(current_song->song_name), max.ws_col),
+            mvprintw(2, center_text(codepoints(current_song->song_name), max.ws_col),
                     "%s", current_song->song_name);
             for (size_t i = 4, k = 0; i < max.ws_row - 1 && k <
                     current_song_lyrics->size; i++, k++) {
                 if (current_song_lyrics->strings[k + idx]) {
-                    size_t pos = center_text(length(current_song_lyrics->strings[k + idx]), max.ws_col);
+                    size_t pos = center_text(codepoints(current_song_lyrics->strings[k + idx]), max.ws_col);
                     LOG("Pos: %zu\n", pos);
-                    LOG("Length: %zu\n", length(current_song_lyrics->strings[k + idx]));
+                    LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k + idx]));
                     LOG("%s\n", current_song_lyrics->strings[k + idx]);
                     mvaddstr(i, pos, current_song_lyrics->strings[k + idx]);
                 }

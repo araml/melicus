@@ -11,6 +11,39 @@ size_t length(const char *line) {
     return len;
 }
 
+// TODO: Add proper checking of valid utf8
+size_t codepoints(const char *line) {
+    size_t len = 0;
+    size_t codepoints = 0;
+    for (; line && line[len] != '\0';) {
+        if ((line[len] & 0xF0) == 0xF0) {
+            len += 4;
+            codepoints++;
+            continue;
+        }
+        if ((line[len] & 0xE0) == 0xE0) {
+            len += 3;
+            codepoints++;
+            continue;
+        }
+
+        if ((line[len] & 0xC0) == 0xC0) {
+            len += 2;
+            codepoints++;
+            continue;
+        }
+
+        if ((line[len] & 0x80) != 0x80) {
+            len++;
+            codepoints++;
+            continue;
+        }
+    }
+
+    return codepoints;
+}
+
+
 size_t get_size_until_next_smybol(const char *s, size_t index, char c) {
     size_t result = 0;
     for(size_t i = index; i < length(s) && s[i] != c; i++) {
