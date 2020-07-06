@@ -1,7 +1,7 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS=-std=c11 --coverage -ggdb -Wall -Wunused-function
+FLAGS=-std=c11 --coverage -ggdb -Wall -Wunused-function -Wextra
 LIBS= -lcurl -lncursesw
 INCLUDE= -Isrc/networking -Isrc/player_backend -Isrc/lyrics -Isrc/utils
 SRC = src/networking/network.c src/player_backend/cmus_status.c \

@@ -82,6 +82,8 @@ char* next_line(lyrics_t *lyrics) {
 }
 
 int center_text(int text_width, int term_width) {
+    if (text_width > term_width)
+        return 0;
     term_width = term_width >> 1;
     text_width = text_width >> 1;
     return term_width - text_width;

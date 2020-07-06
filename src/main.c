@@ -7,6 +7,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <signal.h>
 #include <locale.h>
 #include <langinfo.h>
 
@@ -234,6 +235,63 @@ bool new_song(song_data *old_song, song_data *new_song) {
 
 }
 
+size_t height, width;
+
+struct winsize get_term_size() {
+    struct winsize size;
+    ioctl(1, TIOCGWINSZ, &size);
+    return size;
+}
+
+void init_window() {
+
+}
+
+
+
+bool refresh_screen = false;
+
+void draw_screen() {
+    size_t idx = 0;
+    wclear(stdscr);
+    mvprintw(0, center_text(codepoints(current_song->artist_name), width),
+            "%s", current_song->artist_name);
+    mvprintw(1, center_text(codepoints(current_song->album), width),
+            "%s", current_song->album);
+    mvprintw(2, center_text(codepoints(current_song->song_name), width),
+            "%s", current_song->song_name);
+    for (size_t i = 4, k = 0; i < height - 1 && k <
+            current_song_lyrics->size; i++, k++) {
+        if (current_song_lyrics->strings[k + idx]) {
+            size_t pos = center_text(codepoints(current_song_lyrics->strings[k + idx]), width);
+            LOG("Pos: %zu\n", pos);
+            LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k + idx]));
+            LOG("%s\n", current_song_lyrics->strings[k + idx]);
+            mvaddstr(i, pos, current_song_lyrics->strings[k + idx]);
+        } else {
+            LOG("Newline \n\n");
+        }
+    }
+    refresh_screen = false;
+    wrefresh(stdscr);
+
+}
+
+bool window_size_changed = false;
+
+void resize_window() {
+    window_size_changed = false;
+    struct winsize size = get_term_size();
+    resizeterm(size.ws_row, size.ws_col);
+    height = size.ws_row;
+    width = size.ws_col;
+    draw_screen();
+}
+
+void sig_winch(__attribute__((unused)) int irq) {
+    window_size_changed = true;
+}
+
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
@@ -244,14 +302,15 @@ int main(int argc, char *argv[]) {
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);
     LOG("Screen size %d %d\n", max.ws_row, max.ws_col);
+    height = max.ws_row;
+    width = max.ws_col;
     setlocale(LC_ALL, "");
     initscr();
     nodelay(stdscr, true);
     curs_set(0);
     noecho();
+    signal(SIGWINCH, sig_winch);
 
-    bool refresh_screen = false;
-    size_t idx = 0;
     while (true) {
         song_data *s = get_current_song();
         if (!s) {
@@ -275,25 +334,11 @@ int main(int argc, char *argv[]) {
         }
 
         if (current_song_lyrics && refresh_screen) {
-            wclear(stdscr);
-            mvprintw(0, center_text(codepoints(current_song->artist_name), max.ws_col),
-                    "%s", current_song->artist_name);
-            mvprintw(1, center_text(codepoints(current_song->album), max.ws_col),
-                    "%s", current_song->album);
-            mvprintw(2, center_text(codepoints(current_song->song_name), max.ws_col),
-                    "%s", current_song->song_name);
-            for (size_t i = 4, k = 0; i < max.ws_row - 1 && k <
-                    current_song_lyrics->size; i++, k++) {
-                if (current_song_lyrics->strings[k + idx]) {
-                    size_t pos = center_text(codepoints(current_song_lyrics->strings[k + idx]), max.ws_col);
-                    LOG("Pos: %zu\n", pos);
-                    LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k + idx]));
-                    LOG("%s\n", current_song_lyrics->strings[k + idx]);
-                    mvaddstr(i, pos, current_song_lyrics->strings[k + idx]);
-                }
-            }
-            refresh_screen = false;
-            wrefresh(stdscr);
+            draw_screen();
+        }
+
+        if (window_size_changed) {
+            resize_window();
         }
 
         if (getch() == 'q') {
