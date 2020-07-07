@@ -243,38 +243,64 @@ struct winsize get_term_size() {
     return size;
 }
 
-void init_window() {
+WINDOW *lyrics_pad = NULL;
+size_t pad_height, pad_width;
+WINDOW *title_pad = NULL;
 
+void init_window() {
+    //struct winsize size = get_term_size();
+    //main_pad = newpad(
 }
 
+void create_pad(WINDOW **w, int height) {
+    if (*w) {
+        delwin(*w);
+    }
 
+    *w = newpad(height, 80);
+    nodelay(*w, true);
+    LOG("Pad created with: %zu %d\n", height, 80);
+}
 
 bool refresh_screen = false;
 
+int center_position(char *text) {
+    return center_text(codepoints(text), 80);
+}
+
 void draw_screen() {
+    create_pad(&title_pad, 3);
+    create_pad(&lyrics_pad, current_song_lyrics->size * 2);
     size_t idx = 0;
     wclear(stdscr);
-    mvprintw(0, center_text(codepoints(current_song->artist_name), width),
-            "%s", current_song->artist_name);
-    mvprintw(1, center_text(codepoints(current_song->album), width),
-            "%s", current_song->album);
-    mvprintw(2, center_text(codepoints(current_song->song_name), width),
-            "%s", current_song->song_name);
-    for (size_t i = 4, k = 0; i < height - 1 && k <
+    mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
+              current_song->artist_name);
+    mvwaddstr(title_pad, 1, center_position(current_song->album), current_song->album);
+    mvwaddstr(title_pad, 2, center_position(current_song->song_name), current_song->song_name);
+    for (size_t i = 0, k = 0; i < height - 1 && k <
             current_song_lyrics->size; i++, k++) {
         if (current_song_lyrics->strings[k + idx]) {
-            size_t pos = center_text(codepoints(current_song_lyrics->strings[k + idx]), width);
+            size_t pos = center_text(codepoints(current_song_lyrics->strings[k + idx]), 80);
             LOG("Pos: %zu\n", pos);
             LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k + idx]));
             LOG("%s\n", current_song_lyrics->strings[k + idx]);
-            mvaddstr(i, pos, current_song_lyrics->strings[k + idx]);
+            mvwaddstr(lyrics_pad, i, pos, current_song_lyrics->strings[k + idx]);
         } else {
             LOG("Newline \n\n");
         }
     }
-    refresh_screen = false;
-    wrefresh(stdscr);
 
+    /*           (of pad        )     (rectangle on the screen)
+     * prefresh(pad, y start, x start, y, x, h, w)
+     *
+     */
+
+    int pad_position = center_text(80, width);
+
+    prefresh(title_pad, 0, 0, 0, pad_position, 3, 80);
+    prefresh(lyrics_pad, 4, 0, 3, pad_position, height - 2, width - 2);
+    refresh_screen = false;
+    //refresh();
 }
 
 bool window_size_changed = false;
@@ -333,6 +359,10 @@ int main(int argc, char *argv[]) {
             sched_yield();
         }
 
+        if (lyrics_pad && wgetch(stdscr) == 'q') {
+            break;
+        }
+
         if (current_song_lyrics && refresh_screen) {
             draw_screen();
         }
@@ -341,9 +371,13 @@ int main(int argc, char *argv[]) {
             resize_window();
         }
 
-        if (getch() == 'q') {
-            break;
-        }
+        int pad_position = center_text(80, width);
+
+        prefresh(title_pad, 0, 0, 0, pad_position, 3, 80);
+        prefresh(lyrics_pad, 4, 0, 3, pad_position, height - 2, width - 2);
+
+//        prefresh(title_pad, 0, 0, 0, 4, 3, 80);
+//        prefresh(lyrics_pad, 4, 0, 4, 4, height - 2, width - 2);
 
         usleep(10000);
     }
