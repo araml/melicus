@@ -297,8 +297,9 @@ void draw_screen() {
 
     int pad_position = center_text(80, width);
 
+    refresh();
     prefresh(title_pad, 0, 0, 0, pad_position, 3, 80);
-    prefresh(lyrics_pad, 4, 0, 3, pad_position, height - 2, width - 2);
+    prefresh(lyrics_pad, 0, 0, 4, pad_position, height - 2, width - 2);
     refresh_screen = false;
     //refresh();
 }
@@ -335,6 +336,7 @@ int main(int argc, char *argv[]) {
     nodelay(stdscr, true);
     curs_set(0);
     noecho();
+    cbreak();
     signal(SIGWINCH, sig_winch);
 
     while (true) {
@@ -359,7 +361,7 @@ int main(int argc, char *argv[]) {
             sched_yield();
         }
 
-        if (lyrics_pad && wgetch(stdscr) == 'q') {
+        if (lyrics_pad && wgetch(lyrics_pad) == 'q') {
             break;
         }
 
@@ -371,15 +373,9 @@ int main(int argc, char *argv[]) {
             resize_window();
         }
 
-        int pad_position = center_text(80, width);
 
-        prefresh(title_pad, 0, 0, 0, pad_position, 3, 80);
-        prefresh(lyrics_pad, 4, 0, 3, pad_position, height - 2, width - 2);
-
-//        prefresh(title_pad, 0, 0, 0, 4, 3, 80);
-//        prefresh(lyrics_pad, 4, 0, 4, 4, height - 2, width - 2);
-
-        usleep(10000);
+        wrefresh(title_pad);
+        wrefresh(lyrics_pad);
     }
 
     endwin();
