@@ -264,8 +264,13 @@ void create_pad(WINDOW **w, int height) {
 
 bool refresh_screen = false;
 
+int min(int a, int b) {
+    return a > b ? b : a;
+}
+
 int center_position(char *text) {
-    return center_text(codepoints(text), 80);
+    int _width = min(80, width);
+    return center_text(codepoints(text), _width);
 }
 
 void draw_screen() {
@@ -280,7 +285,7 @@ void draw_screen() {
     for (size_t i = 0, k = 0; i < height - 1 && k <
             current_song_lyrics->size; i++, k++) {
         if (current_song_lyrics->strings[k + idx]) {
-            size_t pos = center_text(codepoints(current_song_lyrics->strings[k + idx]), 80);
+            size_t pos = center_position(current_song_lyrics->strings[k + idx]);
             LOG("Pos: %zu\n", pos);
             LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k + idx]));
             LOG("%s\n", current_song_lyrics->strings[k + idx]);
@@ -298,7 +303,7 @@ void draw_screen() {
     int pad_position = center_text(80, width);
 
     refresh();
-    prefresh(title_pad, 0, 0, 0, pad_position, 3, 80);
+    prefresh(title_pad, 0, 0, 0, pad_position, 3, width -2);
     prefresh(lyrics_pad, 0, 0, 4, pad_position, height - 2, width - 2);
     refresh_screen = false;
     //refresh();
@@ -361,7 +366,7 @@ int main(int argc, char *argv[]) {
             sched_yield();
         }
 
-        if (lyrics_pad && wgetch(lyrics_pad) == 'q') {
+        if (getch() == 'q') {
             break;
         }
 
@@ -372,7 +377,6 @@ int main(int argc, char *argv[]) {
         if (window_size_changed) {
             resize_window();
         }
-
 
         wrefresh(title_pad);
         wrefresh(lyrics_pad);
