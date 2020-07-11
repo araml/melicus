@@ -12,7 +12,7 @@ typedef struct {
 size_t length(const char *line);
 size_t codepoints(const char *line);
 size_t get_size_until_next_smybol(const char *s, size_t index, char c);
-string_split *create_string_string_split(const char *s, char c);
+string_split *create_string_split();
 int add_to_string_split(string_split *ss, const char *s);
 void destroy_string_split(string_split *s);
 int check_prefix(const char *prefix, const char *l);
@@ -26,7 +26,6 @@ int get_line(int fd, char **sline);
 int add_to_string(char **s1, char *s2);
 int add_char_to_string(char **s, char c);
 
-string_split * create_string_ssplit();
-int push_to_string_split(string_split *sv, char *line);
+int push_to_string_split(string_split *sv, const char *line);
 
 #endif // STRING_UTILS_H

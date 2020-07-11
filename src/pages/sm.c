@@ -126,7 +126,7 @@ char *sm_get_lyrics_from_page_string(const char *page_string) {
 }
 
 string_split *sm_clean_lyrics(char *lyrics) {
-    string_split *sv = create_string_ssplit();
+    string_split *sv = create_string_split();
     char *line = NULL;
     for (size_t i = 0; i < length(lyrics); i++) {
         // </br>
@@ -135,7 +135,8 @@ string_split *sm_clean_lyrics(char *lyrics) {
         if (lyrics[i]     == '<' && lyrics[i + 1] == 'b' &&
             lyrics[i + 2] == 'r' && lyrics[i + 3] == '/' && lyrics[i + 4] == '>') {
             i += 4;
-            push_to_string_split(sv, line);
+            line ? push_to_string_split(sv, line) : push_to_string_split(sv, "\n");
+            free(line);
             line = NULL;
             continue;
         }

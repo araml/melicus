@@ -41,10 +41,10 @@ string_split* get_cmus_status() {
         close(pipe_err[1]);
         char *line = NULL;
 
-        string_split *ss = create_string_string_split(NULL, '~');
+        string_split *ss = create_string_split();
 
         while (get_line(pipe_fd[0], &line) != 0) {
-            add_to_string_split(ss, line);
+            push_to_string_split(ss, line);
             free(line);
         }
 

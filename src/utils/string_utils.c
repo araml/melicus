@@ -59,58 +59,12 @@ size_t get_size_until_next_smybol(const char *s, size_t index, char c) {
  * size of the array pointing to each string
  * ALL memory should be free'd with destroy_split_string
  */
-string_split *create_string_string_split(const char *s, char c) {
-    string_split *ss = (string_split *)(malloc(sizeof(string_split)));
-    ss->strings = (char **)malloc(sizeof(char *) * 1);
-    ss->size = 0;
-    ss->reserved_size = 1;
-
-    for (size_t i = 0; i < length(s); i++) {
-        if (ss->size == ss->reserved_size) {
-            char **tmp = (char **)realloc(ss->strings,
-                                          sizeof(char *) *
-                                          (ss->reserved_size *= 2));
-            if (tmp != NULL)
-                ss->strings = tmp;
-            else return NULL;
-        }
-
-        size_t sz = get_size_until_next_smybol(s, i, c);
-        if (sz == 0)
-            continue;
-        ss->strings[ss->size] = (char *)malloc(sz + 1);
-        memset(ss->strings[ss->size], '\0', sz + 1);
-        for (size_t k = i; i < length(s) && s[i] != c; i++) {
-            ss->strings[ss->size][i - k] = s[i];
-        }
-
-        ss->size++;
-    }
-
-    return ss;
-}
-
-int add_to_string_split(string_split *ss, const char *s) {
-    if (!s)  // NULL string
-        return -1;
-
-    if (ss->size == ss->reserved_size) {
-        char **tmp = (char **)realloc(ss->strings,
-                                      sizeof(char *) *
-                                      (ss->reserved_size *= 2));
-        if (tmp != NULL)
-            ss->strings = tmp;
-        else return -1;
-    }
-
-    ss->strings[ss->size] = (char *)malloc(length(s) + 1);
-    memset(ss->strings[ss->size], '\0', length(s) + 1);
-    for (size_t i = 0; i < length(s); i++) {
-        ss->strings[ss->size][i] = s[i];
-    }
-
-    ss->size++;
-    return 0;
+string_split *create_string_split() {
+    string_split *r = (string_split *)malloc(sizeof(string_split));
+    r->strings = NULL;
+    r->size = 0;
+    r->reserved_size = 0;
+    return r;
 }
 
 void destroy_string_split(string_split *ss) {
@@ -297,29 +251,30 @@ int add_char_to_string(char **s, char c) {
     return 0;
 }
 
-string_split* create_string_ssplit() {
-    string_split *r = (string_split *)malloc(sizeof(string_split));
-    r->strings = NULL;
-    r->size = 0;
-    r->reserved_size = 0;
-    return r;
-}
+int push_to_string_split(string_split *ss, const char *line) {
+    if (!line)
+        return -1;
 
-
-int push_to_string_split(string_split *sv, char *line) {
-    if (sv->reserved_size == 0) {
-        sv->strings = (char **)malloc(sizeof(char *));
-        sv->reserved_size = 1;
-    } else if (sv->size == sv->reserved_size) {
-        char **tmp = (char **)realloc(sv->strings, sizeof(char *) *
-                                      (sv->reserved_size *= 2));
+    if (ss->reserved_size == 0) {
+        ss->strings = (char **)malloc(sizeof(char *));
+        ss->reserved_size = 1;
+    } else if (ss->size == ss->reserved_size) {
+        char **tmp = (char **)realloc(ss->strings, sizeof(char *) *
+                                      (ss->reserved_size *= 2));
         if (tmp) {
-            sv->strings = tmp;
+            ss->strings = tmp;
         } else {
             return -1;
         }
     }
 
-    sv->strings[sv->size++] = line;
+    ss->strings[ss->size] = (char *)malloc(length(line) + 1);
+    memset(ss->strings[ss->size], '\0', length(line) + 1);
+    for (size_t i = 0; i < length(line); i++) {
+        ss->strings[ss->size][i] = line[i];
+    }
+
+    ss->size++;
+
     return 0;
 }
