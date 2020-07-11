@@ -3,10 +3,11 @@ FUZZ_CC=afl-gcc
 
 FLAGS=-std=c11 --coverage -ggdb -Wall -Wunused-function -Wextra
 LIBS= -lcurl -lncursesw
-INCLUDE= -Isrc/networking -Isrc/player_backend -Isrc/lyrics -Isrc/utils
+INCLUDE= -Isrc/networking -Isrc/player_backend -Isrc/lyrics -Isrc/utils -Isrc/pages
 SRC = src/networking/network.c src/player_backend/cmus_status.c \
       src/utils/string_utils.c src/lyrics/lyrics.c src/lyrics/song_data.c \
-      src/utils/log.c
+      src/utils/log.c src/pages/sm.c
+
 .PHONY: melicus
 all: melicus
 #fuzz: main_fuzz

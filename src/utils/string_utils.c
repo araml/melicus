@@ -296,3 +296,30 @@ int add_char_to_string(char **s, char c) {
 
     return 0;
 }
+
+string_split* create_string_ssplit() {
+    string_split *r = (string_split *)malloc(sizeof(string_split));
+    r->strings = NULL;
+    r->size = 0;
+    r->reserved_size = 0;
+    return r;
+}
+
+
+int push_to_string_split(string_split *sv, char *line) {
+    if (sv->reserved_size == 0) {
+        sv->strings = (char **)malloc(sizeof(char *));
+        sv->reserved_size = 1;
+    } else if (sv->size == sv->reserved_size) {
+        char **tmp = (char **)realloc(sv->strings, sizeof(char *) *
+                                      (sv->reserved_size *= 2));
+        if (tmp) {
+            sv->strings = tmp;
+        } else {
+            return -1;
+        }
+    }
+
+    sv->strings[sv->size++] = line;
+    return 0;
+}

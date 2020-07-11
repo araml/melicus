@@ -26,4 +26,7 @@ int get_line(int fd, char **sline);
 int add_to_string(char **s1, char *s2);
 int add_char_to_string(char **s, char c);
 
+string_split * create_string_ssplit();
+int push_to_string_split(string_split *sv, char *line);
+
 #endif // STRING_UTILS_H

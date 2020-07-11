@@ -1,6 +1,8 @@
 #include <network.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string_utils.h>
+#include <log.h>
 
 void destroy_curl_buffer(curl_buffer *buf) {
     free(buf->buffer);
@@ -44,4 +46,52 @@ CURL *make_handle(char *url, curl_buffer *cbuf) {
     return handle;
 }
 
-char *make_song_url(char *song_name);
+char *replace_spaces_with_html_spaces(char *url) {
+    size_t length_url = 0;
+    for (size_t i = 0; i <= length(url); i++) {
+        if (url[i] == ' ') {
+            length_url += 3;
+        } else {
+            length_url++;
+        }
+    }
+
+    LOG("String length: %zu\nNew length: %zu\n",
+            length(url), length_url);
+
+    char *tmp_url = (char *)malloc(length_url + 1);
+    memset(tmp_url, 0, length_url + 1);
+
+    // TODO: do this for the artist name
+    // TODO 2: refactor this into its own function in networking
+    for (size_t i = 0, k = 0; i <= length(url); i++) {
+        if (url[i] == ' ') {
+            tmp_url[k] = '%';
+            tmp_url[k + 1] = '2';
+            tmp_url[k + 2] = '2';
+            k += 3;
+        } else {
+            tmp_url[k] = url[i];
+            k++;
+        }
+    }
+
+    return tmp_url;
+}
+
+curl_buffer *get_page(char *url) {
+    curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
+    memset(buf, 0, sizeof(curl_buffer));
+
+    CURL *handle = make_handle(url, buf);
+    curl_easy_perform(handle);
+    curl_easy_cleanup(handle);
+
+    char *tmp = (char *)realloc(buf->buffer, buf->size + 1);
+    if (tmp) {
+        buf->buffer = tmp;
+        buf->size += 1;
+    }
+    buf->buffer[buf->size - 1] = '\0';
+    return buf;
+}
