@@ -1,22 +1,47 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS=-std=c11 --coverage -ggdb -Wall -Wunused-function -Wextra
+FLAGS=-std=c11 -ggdb -Wall -Wunused-function -Wextra --coverage
 LIBS= -lcurl -lncursesw
-INCLUDE= -Isrc/networking -Isrc/player_backend -Isrc/lyrics -Isrc/utils -Isrc/pages
-SRC = src/networking/network.c src/player_backend/cmus_status.c \
-      src/utils/string_utils.c src/lyrics/lyrics.c src/lyrics/song_data.c \
-      src/utils/log.c src/pages/sm.c
 
-.PHONY: melicus
+NETWORKING = networking
+PLAYER_BACKEND = player_backend
+UTILS = utils
+LYRICS = lyrics
+PAGES = pages
+INCLUDE_DIRS = $(NETWORKING) $(PLAYER_BACKEND) $(UTILS) $(LYRICS) $(PAGES)
+INCLUDE= $(foreach p, $(INCLUDE_DIRS), -Isrc/$p)
+
+SRC = networking/network.c player_backend/cmus_status.c \
+      utils/string_utils.c lyrics/lyrics.c lyrics/song_data.c \
+      utils/log.c pages/sm.c main.c
+
+OBJS = $(addprefix $(BUILD)/, $(addsuffix .o, $(basename $(SRC))))
+FOLDERS = $(sort $(addprefix $(BUILD)/, $(dir $(SRC))))
+
+BUILD = build
+
+.PHONY: melicus clean
 all: melicus
+
+$(BUILD)/%.o: %.c
+	$(CC) -c $^ -o $@ $(INCLUDE) $(FLAGS)
+
+$(FOLDERS):
+	mkdir -p $@
+
+melicus: $(FOLDERS) $(OBJS)
+	$(CC) $(OBJS) $(LIBS) $(FLAGS) $(INCLUDE) -o build/melicus
+
+clean:
+	rm -rf build/*
+
+vpath %.c src
+
+
 #fuzz: main_fuzz
 #string: string_utils
 #string_search: string_search_test
-
-
-melicus:
-	$(CC) src/main.c $(SRC) $(LIBS) $(FLAGS) $(INCLUDE) -o build/melicus
 
 #main_fuzz:
 #	$(FUZZ_CC) tests/test.c src/lyrics.c -lncurses $(FLAGS) $(INCLUDE) -o build/main_fuzzable
