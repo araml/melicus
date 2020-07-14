@@ -74,9 +74,77 @@ int center_position(char *text) {
     return center_text(codepoints(text), _width);
 }
 
+#define LYRICS_WIDTH 80
+
+int next_word_size(char *line) {
+    if (!line)
+        return 0;
+    int sz = 0, i = 0;
+    while (true) {
+        if (line[i] == '\0' || line[i] == ' ') {
+            break;
+        }
+        i++;
+        sz++;
+    }
+
+    return sz;
+}
+
+int count_used_rows(char *line, __attribute__((unused)) int lyrics_width) {
+    int rows = 0;
+    int idx = 0;
+
+    while (line[idx] != '\0') {
+        int lsz = 0;
+        int nsz = next_word_size(line + idx);
+        if (nsz > 80) { // A word is too long it'll wrap
+            rows += nsz / 80 + (nsz % 80 ? 1 : 0);
+            idx += nsz;
+            continue;
+        }
+
+        while (true) {
+            lsz += next_word_size(line + idx);
+            if (lsz < 80) { // We can add a new word to this line
+                idx += next_word_size(line + idx);
+                if (line[idx] != '\0')
+                    idx++;
+                else {
+                    rows++;
+                    break;
+                }
+            } else { // We went too far.
+                lsz -= next_word_size(line + idx);
+                rows++;
+                break;
+            }
+        }
+    }
+
+
+    return rows;
+}
+
+int calculate_lyrics_height(string_split *lyrics) {
+    int total_rows = 0;
+    for (int i = 0; i < lyrics->size; i++) {
+        if (!lyrics->strings[i]) {
+            total_rows++;
+            continue;
+        } else {
+            total_rows += count_used_rows(lyrics->strings[i], LYRICS_WIDTH);
+        }
+    }
+
+    return total_rows;
+}
+
+
 void draw_screen() {
     create_pad(&title_pad, 3);
-    create_pad(&lyrics_pad, current_song_lyrics->size * 2);
+    create_pad(&lyrics_pad, calculate_lyrics_height(current_song_lyrics));
+    LOG("lyric height calc %d\n", calculate_lyrics_height(current_song_lyrics));
     size_t idx = 0;
     wclear(stdscr);
     mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
