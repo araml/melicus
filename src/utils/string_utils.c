@@ -232,6 +232,8 @@ int add_to_string(char **s1, char *s2) {
     return 0;
 }
 
+// TODO: Fix overly large realloc (exponential)
+// not checking current length...
 int add_char_to_string(char **s, char c) {
     if (*s == NULL) {
         *s = (char *)malloc(2);

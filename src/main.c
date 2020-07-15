@@ -169,16 +169,85 @@ int calculate_lyrics_height(string_split *lyrics) {
     return total_rows;
 }
 
+typedef struct {
+    int next_idx;
+    int nrows;
+} xx;
+
+xx get_print_pos(string_split *s, __attribute__((unused)) int lyrics_width,
+                     int idx) {
+    int rows = 0;
+    xx ps;
+
+    while (true) {
+        if (idx == s->size)
+            break;
+
+        size_t l = length(s->strings[idx]);
+        idx++;
+        // If the word is too big then its going to fill its own lines
+        if (l >= 80) {
+            rows += (l / 80) + (l % 80 ? 1 : 0);
+            goto end;
+        }
+
+        l++;
+        /* If the word is not big enough then we can add it to the current line
+         * and try tp keep adding more words to it
+         */
+        while (true) {
+            if (idx == s->size) {
+                rows++;
+                goto end;
+            }
+            // + 1 for the whitespace between words
+            if (l + length(s->strings[idx]) + 1 < 80) {
+                l = l + length(s->strings[idx]) + 1;
+                idx++;
+            } else {
+                rows++;
+                goto end;
+            }
+        }
+    }
+
+end:
+    ps.nrows = rows;
+    ps.next_idx = idx;
+    return ps;
+
+}
+
 void draw_lyrics() {
     for (size_t k = 0, i = 0; k < current_song_lyrics->size; k++) {
         if (current_song_lyrics->strings[k]) {
-            size_t pos = center_position(current_song_lyrics->strings[k]);
-            LOG("Pos: %zu\n", pos);
-            LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k]));
-            LOG("%s\n", current_song_lyrics->strings[k]);
-            mvwaddstr(lyrics_pad, i, pos, current_song_lyrics->strings[k]);
-            LOG("Counted %d\n", count_used_rows(current_song_lyrics->strings[k], 80));
-            i += count_used_rows(current_song_lyrics->strings[k], LYRICS_WIDTH);
+            int idx = 0;
+            string_split *l = split_line(current_song_lyrics->strings[k]);
+            while (idx != l->size) {
+                xx rs = get_print_pos(l, 80, idx);
+                if (rs.nrows > 1) {
+                    size_t pos = center_position(current_song_lyrics->strings[k]);
+                    mvwaddstr(lyrics_pad, i, pos, l->strings[idx]);
+                } else {
+                    char buf[81];
+                    memset(buf, 0, 80);
+                    int buf_idx = 0;
+                    for (int p = idx; p < rs.next_idx; p++) {
+                        memcpy(buf + buf_idx, l->strings[p], length(l->strings[p]));
+                        buf_idx += length(l->strings[p]);
+                        if (buf_idx != 80) {
+                            buf[buf_idx] = ' ';
+                            buf_idx++;
+                        }
+                    }
+
+                    size_t pos = center_position(buf);
+                    mvwaddstr(lyrics_pad, i, pos, buf);
+                }
+                idx = rs.next_idx;
+                i += rs.nrows;
+            }
+
             //i++;
         } else {
             LOG("Newline \n\n");
