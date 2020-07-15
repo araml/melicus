@@ -91,37 +91,66 @@ int next_word_size(char *line) {
     return sz;
 }
 
+string_split *split_line(char *line) {
+    string_split *s = create_string_split();
+    char *word = NULL;
+    for (size_t i = 0; line[i] != '\0'; i++) {
+        if (line[i] == ' ') {
+            push_to_string_split(s, word);
+            free(word);
+            word = NULL;
+        } else {
+            add_char_to_string(&word, line[i]);
+        }
+    }
+
+    if (word)
+        push_to_string_split(s, word);
+
+    return s;
+}
+
 int count_used_rows(char *line, __attribute__((unused)) int lyrics_width) {
+    if (!line)
+        return 1;
+
     int rows = 0;
     int idx = 0;
 
-    while (line[idx] != '\0') {
-        int lsz = 0;
-        int nsz = next_word_size(line + idx);
-        if (nsz > 80) { // A word is too long it'll wrap
-            rows += nsz / 80 + (nsz % 80 ? 1 : 0);
-            idx += nsz;
+    string_split *s = split_line(line);
+    while (true) {
+        if (idx == s->size)
+            break;
+
+        size_t l = length(s->strings[idx]);
+        idx++;
+        // If the word is too big then its going to fill its own lines
+        if (l >= 80) {
+            rows += (l / 80) + (l % 80 ? 1 : 0);
             continue;
         }
 
+        l++;
+        /* If the word is not big enough then we can add it to the current line
+         * and try tp keep adding more words to it
+         */
         while (true) {
-            lsz += next_word_size(line + idx);
-            if (lsz < 80) { // We can add a new word to this line
-                idx += next_word_size(line + idx);
-                if (line[idx] != '\0')
-                    idx++;
-                else {
-                    rows++;
-                    break;
-                }
-            } else { // We went too far.
-                lsz -= next_word_size(line + idx);
+            if (idx == s->size) {
+                rows++;
+                break;
+            }
+            // + 1 for the whitespace between words
+            if (l + length(s->strings[idx]) + 1 < 80) {
+                l = l + length(s->strings[idx]) + 1;
+                idx++;
+            } else {
                 rows++;
                 break;
             }
         }
     }
 
+    destroy_string_split(s);
 
     return rows;
 }
@@ -140,29 +169,38 @@ int calculate_lyrics_height(string_split *lyrics) {
     return total_rows;
 }
 
+void draw_lyrics() {
+    for (size_t k = 0, i = 0; k < current_song_lyrics->size; k++) {
+        if (current_song_lyrics->strings[k]) {
+            size_t pos = center_position(current_song_lyrics->strings[k]);
+            LOG("Pos: %zu\n", pos);
+            LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k]));
+            LOG("%s\n", current_song_lyrics->strings[k]);
+            mvwaddstr(lyrics_pad, i, pos, current_song_lyrics->strings[k]);
+            LOG("Counted %d\n", count_used_rows(current_song_lyrics->strings[k], 80));
+            i += count_used_rows(current_song_lyrics->strings[k], LYRICS_WIDTH);
+            //i++;
+        } else {
+            LOG("Newline \n\n");
+            i++;
+        }
+    }
+}
+
 
 void draw_screen() {
     create_pad(&title_pad, 3);
-    create_pad(&lyrics_pad, calculate_lyrics_height(current_song_lyrics));
+    int lyrics_height = calculate_lyrics_height(current_song_lyrics);
+    create_pad(&lyrics_pad, lyrics_height);
     LOG("lyric height calc %d\n", calculate_lyrics_height(current_song_lyrics));
-    size_t idx = 0;
+
     wclear(stdscr);
     mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
               current_song->artist_name);
     mvwaddstr(title_pad, 1, center_position(current_song->album), current_song->album);
     mvwaddstr(title_pad, 2, center_position(current_song->song_name), current_song->song_name);
-    for (size_t i = 0, k = 0; i < height - 1 && k <
-            current_song_lyrics->size; i++, k++) {
-        if (current_song_lyrics->strings[k + idx]) {
-            size_t pos = center_position(current_song_lyrics->strings[k + idx]);
-            LOG("Pos: %zu\n", pos);
-            LOG("Length: %zu\n", codepoints(current_song_lyrics->strings[k + idx]));
-            LOG("%s\n", current_song_lyrics->strings[k + idx]);
-            mvwaddstr(lyrics_pad, i, pos, current_song_lyrics->strings[k + idx]);
-        } else {
-            LOG("Newline \n\n");
-        }
-    }
+
+    draw_lyrics();
 
     /*           (of pad        )     (rectangle on the screen)
      * prefresh(pad, y start, x start, y, x, h, w)
