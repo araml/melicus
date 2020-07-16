@@ -104,8 +104,10 @@ string_split *split_line(char *line) {
         }
     }
 
-    if (word)
+    if (word) {
         push_to_string_split(s, word);
+        free(word);
+    }
 
     return s;
 }
@@ -248,6 +250,8 @@ void draw_lyrics() {
                 i += rs.nrows;
             }
 
+            destroy_string_split(l);
+
             //i++;
         } else {
             LOG("Newline \n\n");
@@ -327,7 +331,12 @@ int main(int argc, char *argv[]) {
         }
 
         if (!current_song || new_song(current_song, s)) {
+            if (current_song) {
+                destroy_song_data(current_song);
+            }
+
             current_song = s;
+
             string_split *new_lyrics = get_lyrics(s);
 
             LOG("Old song: %s\n", current_song->song_name);
@@ -338,6 +347,7 @@ int main(int argc, char *argv[]) {
             LOG("New song: %s\n", current_song->song_name);
             refresh_screen = true;
         } else {
+            destroy_song_data(s);
             sched_yield();
         }
 
@@ -358,8 +368,8 @@ int main(int argc, char *argv[]) {
     }
 
     endwin();
-    destroy_string_split(current_song_lyrics);
     destroy_song_data(current_song);
+    destroy_string_split(current_song_lyrics);
     return 0;
 }
 
