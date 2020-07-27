@@ -1,7 +1,7 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS=-std=c11 -ggdb -Wall -Wunused-function -Wextra --coverage
+FLAGS=-std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage
 LIBS= -lcurl -lncursesw
 
 NETWORKING = networking
@@ -23,6 +23,9 @@ BUILD = build
 
 .PHONY: melicus clean
 all: melicus
+
+debug: FLAGS += -DDEBUG
+debug: melicus
 
 $(BUILD)/%.o: %.c
 	$(CC) -c $^ -o $@ $(INCLUDE) $(FLAGS)

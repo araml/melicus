@@ -177,7 +177,7 @@ typedef struct {
 } xx;
 
 xx get_print_pos(string_split *s, __attribute__((unused)) int lyrics_width,
-                     int idx) {
+                 int idx) {
     int rows = 0;
     xx ps;
 
@@ -310,6 +310,7 @@ int main(int argc, char *argv[]) {
     current_song = NULL;
     current_song_lyrics = NULL;
     //string_split *l = NULL;
+    log_init();
 
     struct winsize max;
     ioctl(1, TIOCGWINSZ, &max);

@@ -62,8 +62,6 @@ char *replace_spaces_with_html_spaces(char *url) {
     char *tmp_url = (char *)malloc(length_url + 1);
     memset(tmp_url, 0, length_url + 1);
 
-    // TODO: do this for the artist name
-    // TODO 2: refactor this into its own function in networking
     for (size_t i = 0, k = 0; i <= length(url); i++) {
         if (url[i] == ' ') {
             tmp_url[k] = '%';

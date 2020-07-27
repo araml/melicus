@@ -86,6 +86,8 @@ int check_prefix(const char *prefix, const char *s) {
     return 1;
 }
 
+// TODO: this is SM.c specific, maybe move there?
+// TODO v2: use sockets instead of forking to get this data..
 void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
     if (!check_prefix(prefix, subs + 4)) {
         return;
