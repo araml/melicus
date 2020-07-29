@@ -1,8 +1,8 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS=-std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage
-LIBS= -lcurl -lncursesw
+FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage
+LIBS = -lcurl -lncursesw
 
 NETWORKING = networking
 PLAYER_BACKEND = player_backend
@@ -21,11 +21,13 @@ FOLDERS = $(sort $(addprefix $(BUILD)/, $(dir $(SRC))))
 
 BUILD = build
 
-.PHONY: melicus clean
+.PHONY: melicus clean tests
+all: FLAGS += -DDEBUG
 all: melicus
 
-debug: FLAGS += -DDEBUG
-debug: melicus
+tests: compile_and_run_tests
+
+release: melicus
 
 $(BUILD)/%.o: %.c
 	$(CC) -c $^ -o $@ $(INCLUDE) $(FLAGS)
@@ -35,6 +37,11 @@ $(FOLDERS):
 
 melicus: $(FOLDERS) $(OBJS)
 	$(CC) $(OBJS) $(LIBS) $(FLAGS) $(INCLUDE) -o build/melicus
+
+
+compile_and_run_tests:
+	$(CC) tests/test_string_utils.c src/utils/string_utils.c -lcmocka $(INCLUDE) -o build/test_string_utils
+	./build/test_string_utils
 
 clean:
 	rm -rf build/*

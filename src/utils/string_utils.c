@@ -127,7 +127,7 @@ size_t find_in_string(const char *s, const char *to_find) {
     return -1;
 }
 
-int check_suffix(char *text, char *word, size_t text_length, size_t word_length) {
+int check_suffix(const char *text, const char *word, size_t text_length, size_t word_length) {
     for (size_t i = 0; i <= word_length && i <= text_length; i++) {
         if (text[word_length - i] != word[word_length - i])
             return 0;
@@ -213,7 +213,7 @@ int get_line(int fd, char **sline) {
     }
 }
 
-int add_to_string(char **s1, char *s2) {
+int add_to_string(char **s1, const char *s2) {
     if (!s2)
         return -1;
 
