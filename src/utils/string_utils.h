@@ -3,11 +3,14 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+
 typedef struct {
     char **strings;
     size_t size;
     size_t reserved_size;
 } string_split ;
+
+#define MELICUS_ERR (-1)
 
 size_t length(const char *line);
 size_t codepoints(const char *line);

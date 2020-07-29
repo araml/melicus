@@ -55,8 +55,30 @@ static void test_find_in_string(void MELICUS_UNUSED **state) {
     char long_string[] = "Hello World hello world";
     char to_find[] = "hello world";
     assert_true(find_in_string(long_string, to_find) == 12);
+    assert_true(find_in_string(long_string, "Garbage") == MELICUS_ERR);
 }
 
+static void test_string_split(void MELICUS_UNUSED **state) {
+    string_split *ss = create_string_split();
+    assert_ptr_equal(ss->strings, NULL);
+    assert_int_equal(ss->size, 0);
+    assert_int_equal(ss->reserved_size, 0);
+
+    push_to_string_split(ss, "Hello");
+    assert_ptr_not_equal(ss->strings, NULL);
+    assert_int_equal(ss->size, 1);
+    assert_int_equal(ss->reserved_size, 1);
+    push_to_string_split(ss, "World");
+    assert_ptr_not_equal(ss->strings, NULL);
+    assert_int_equal(ss->size, 2);
+    assert_int_equal(ss->reserved_size, 2);
+    push_to_string_split(ss, "!");
+    assert_ptr_not_equal(ss->strings, NULL);
+    assert_int_equal(ss->size, 3);
+    assert_int_equal(ss->reserved_size, 4);
+
+    destroy_string_split(ss);
+}
 
 int main() {
     const struct CMUnitTest tests[] = {
@@ -65,6 +87,7 @@ int main() {
         cmocka_unit_test(test_check_suffix),
         cmocka_unit_test(test_check_prefix),
         cmocka_unit_test(test_find_in_string),
+        cmocka_unit_test(test_string_split),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
