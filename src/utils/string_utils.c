@@ -86,8 +86,7 @@ int check_prefix(const char *prefix, const char *s) {
     return 1;
 }
 
-// TODO: this is SM.c specific, maybe move there?
-// TODO v2: use sockets instead of forking to get this data..
+// TODO: this is cmus specific, maybe move there?
 void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
     if (!check_prefix(prefix, subs + 4)) {
         return;
@@ -129,7 +128,7 @@ size_t find_in_string(const char *s, const char *to_find) {
 
 int check_suffix(const char *text, const char *word, size_t text_length, size_t word_length) {
     for (size_t i = 0; i <= word_length && i <= text_length; i++) {
-        if (text[word_length - i] != word[word_length - i])
+        if (text[text_length - i] != word[word_length - i])
             return 0;
     }
 

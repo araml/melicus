@@ -7,12 +7,6 @@
 
 #define MELICUS_UNUSED __attribute__((unused))
 
-static void test_find_in_string(void MELICUS_UNUSED **state) {
-    char long_string[] = "Hello World hello world";
-    char to_find[] = "hello world";
-    assert_true(find_in_string(long_string, to_find) == 12);
-}
-
 static void test_append_to_string(void MELICUS_UNUSED **state) {
     char *test_str = NULL;
     add_to_string(&test_str, "Test");
@@ -49,14 +43,28 @@ static void test_add_char_to_string(void MELICUS_UNUSED **state) {
 
 static void test_check_suffix(void MELICUS_UNUSED **state) {
     char h1[] = "Hello World";
-    assert_true(check_suffix(h1, "Hello", length(h1), length("Hello")));
+    assert_true(check_suffix(h1, "World", length(h1), length("World")) > 0);
 }
+
+static void test_check_prefix(void MELICUS_UNUSED **state) {
+    char h1[] = "Hello World";
+    assert_true(check_prefix(h1, "Hello"));
+}
+
+static void test_find_in_string(void MELICUS_UNUSED **state) {
+    char long_string[] = "Hello World hello world";
+    char to_find[] = "hello world";
+    assert_true(find_in_string(long_string, to_find) == 12);
+}
+
 
 int main() {
     const struct CMUnitTest tests[] = {
-        cmocka_unit_test(test_find_in_string),
         cmocka_unit_test(test_append_to_string),
         cmocka_unit_test(test_add_char_to_string),
+        cmocka_unit_test(test_check_suffix),
+        cmocka_unit_test(test_check_prefix),
+        cmocka_unit_test(test_find_in_string),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

@@ -40,7 +40,7 @@ melicus: $(FOLDERS) $(OBJS)
 
 
 compile_and_run_tests:
-	$(CC) tests/test_string_utils.c src/utils/string_utils.c -lcmocka $(INCLUDE) -o build/test_string_utils
+	$(CC) tests/test_string_utils.c src/utils/string_utils.c -lcmocka $(INCLUDE) $(FLAGS) -o build/test_string_utils
 	./build/test_string_utils
 
 clean:
