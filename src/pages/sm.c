@@ -36,56 +36,76 @@ char *sm_make_song_url(song_data *data) {
     return url;
 }
 
+#define ERR_FIND ((size_t) - 1)
+
 char *sm_find_link_for_song(char *page, song_data *s) {
-    //LOG("%s", page);
-    char prefix_find_artist[] = "title=\"";
-    char jjj = '"';
-    char *find_artist_name = (char *)malloc(length(prefix_find_artist) +
-                                            length(s->artist_name) + 2);
-    memset(find_artist_name, 0, length(prefix_find_artist) + length(s->artist_name) + 2);
-    memcpy(find_artist_name, prefix_find_artist, length(prefix_find_artist));
-    memcpy(find_artist_name + length(prefix_find_artist), s->artist_name, length(s->artist_name));
-    memcpy(find_artist_name + length(prefix_find_artist) + length(s->artist_name), &jjj, 1);
+    char song_table[] = "songs table";
+    char title[] = "title";
+    char song_href[] = "href=\"";
 
-    LOG("Find artist name: %s\n", find_artist_name);
+    size_t idx = 0;
+    size_t total_idx = 0;
 
-    size_t idx = find_in_string(page, find_artist_name);
-    if (idx == (size_t) - 1) { // The song is not found
-        return NULL;
+    while (true) {
+
+        idx = find_in_string(page, song_table);
+        total_idx = idx;
+        if (idx == ERR_FIND) {
+            LOG("Error no song table");
+            return NULL;
+        }
+
+        page += idx;
+        total_idx += idx;
+
+        idx = find_in_string(page, s->song_name);
+        if (idx == ERR_FIND) {
+            LOG("Error no song name in song table");
+            return NULL;
+        }
+
+        page += idx;
+        total_idx += idx;
+
+        idx = find_in_string(page, title);
+        /* Asume theres always a title= if we found a song name, so don't check for
+         * errors
+         */
+
+
+        size_t artist_idx = find_in_string(page, s->artist_name);
+
+        /* This checks that the distance to the artist name is closer to this
+         * song than to the next one.
+         * horrivel 8{
+         */
+        if (artist_idx > 0 && artist_idx - idx < 50) {
+            /* We have found a match for both song and title */
+            size_t less = reverse_find(page, song_href, total_idx);
+            page -= less;
+            page += sizeof(song_href) - 1;
+            //page += 7; // title="
+            char *link = (char *)malloc(128);
+            memset(link, 0, 128);
+
+            for (size_t k = 0; page[k] != '"'; k++) {
+                link[k + 5] = page[k];
+            }
+
+            link[0] = 'h';
+            link[1] = link[2] = 't';
+            link[3] = 'p';
+            link[4] = 's';
+            link[5] = ':';
+
+            LOG("New url %s\n", link);
+            return link;
+        } else {
+            page += artist_idx + idx;
+        }
     }
-    LOG("Index is %zu %zu\n", idx, -1);
 
-    // FIXME: This == -1 check is wrong since reverse find will return 0
-    // when it doesn't finds the string
-    idx = idx - reverse_find(page + idx, s->song_name, idx);
-    if (idx == (size_t) - 1)
-        return NULL;
-
-    LOG("Index is %zu %zu\n", idx, -1);
-
-    char url_delim[] = "href=\"";
-    idx = idx + length(url_delim) - reverse_find(page + idx, url_delim, idx);
-    // FIXME: same as the fixme above (this is *almost* never == -1, needs
-    // a ttmp idx to compare, and reverse_find should return -1 in that case
-    if (idx == (size_t) - 1)
-        return NULL;
-
-    char *link = (char *)malloc(256); // No link (at least for SM) is longer than 256.
-    memset(link, 0, 256);
-
-    for (size_t i = 0; i < 256 && page[idx + i] != '"'; i++) {
-        link[i + 6] = page[idx + i];
-    }
-    //songmeanings.com/songs/view/3458764513820548010/
-
-    link[0] = 'h';
-    link[1] = link[2] = 't';
-    link[3] = 'p';
-    link[4] = 's';
-    link[5] = ':';
-
-    LOG("Link %s\n", link);
-    return link;
+    return NULL;
 }
 
 char *sm_get_lyrics_from_page_string(const char *page_string) {

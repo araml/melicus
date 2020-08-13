@@ -261,6 +261,20 @@ void draw_lyrics() {
 }
 
 
+void draw_status_bar() {
+    attron(COLOR_PAIR(1));
+    mvaddch(height - 2, 0, ' ');
+    char status[] = "Status";
+    mvaddstr(height - 2, 1, status);
+    for (int i = sizeof(status); i < width; i++) {
+        mvaddch(height - 2, i, ' ');
+    }
+
+
+    attroff(COLOR_PAIR(1));
+}
+
+
 void draw_screen() {
     create_pad(&title_pad, 3);
     int lyrics_height = calculate_lyrics_height(current_song_lyrics);
@@ -274,6 +288,8 @@ void draw_screen() {
     mvwaddstr(title_pad, 2, center_position(current_song->song_name), current_song->song_name);
 
     draw_lyrics();
+    draw_status_bar();
+
 
     /*           (of pad        )     (rectangle on the screen)
      * prefresh(pad, y start, x start, y, x, h, w)
@@ -284,7 +300,7 @@ void draw_screen() {
 
     refresh();
     prefresh(title_pad, 0, 0, 0, pad_position, 3, width -2);
-    prefresh(lyrics_pad, 0, 0, 4, pad_position, height - 2, width - 2);
+    prefresh(lyrics_pad, 0, 0, 4, pad_position, height - 4, width - 2);
     refresh_screen = false;
     //refresh();
 }
@@ -324,6 +340,12 @@ int main(int argc, char *argv[]) {
     noecho();
     cbreak();
     signal(SIGWINCH, sig_winch);
+
+    start_color();
+    use_default_colors();
+    init_pair(1, COLOR_WHITE, COLOR_BLUE);
+    init_pair(2, COLOR_BLUE, -1);
+    init_pair(3, COLOR_BLUE, COLOR_BLUE);
 
     while (true) {
         song_data *s = get_current_song();

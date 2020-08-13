@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string_utils.h>
 
-#define MELICUS_UNUSED __attribute__((unused))
-
 static void test_append_to_string(void MELICUS_UNUSED **state) {
     char *test_str = NULL;
     add_to_string(&test_str, "Test");

@@ -11,6 +11,7 @@ typedef struct {
 } string_split ;
 
 #define MELICUS_ERR (-1)
+#define MELICUS_UNUSED __attribute__((unused))
 
 size_t length(const char *line);
 size_t codepoints(const char *line);

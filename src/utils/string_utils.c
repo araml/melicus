@@ -137,12 +137,13 @@ int check_suffix(const char *text, const char *word, size_t text_length, size_t 
 
 size_t reverse_find(char *text, char *word, size_t text_length) {
     size_t word_length = length(word);
-    for (size_t i = 0; i < text_length; i++) {
-        if (check_suffix(text - i, word, text_length - i, word_length - 1)) {
+
+    for (size_t i = word_length; i < text_length; i++) {
+        if (check_prefix_with_length(text - i, word, word_length, word_length)) {
             return i;
         }
-        text_length--;
     }
+
     return 0;
 }
 

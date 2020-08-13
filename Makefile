@@ -1,7 +1,7 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage
+FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef
 LIBS = -lcurl -lncursesw
 
 NETWORKING = networking
@@ -41,7 +41,9 @@ melicus: $(FOLDERS) $(OBJS)
 
 compile_and_run_tests:
 	$(CC) tests/test_string_utils.c src/utils/string_utils.c -lcmocka $(INCLUDE) $(FLAGS) -o build/test_string_utils
+	$(CC) tests/test_sm.c src/utils/string_utils.c src/pages/sm.c src/lyrics/song_data.c src/utils/log.c src/networking/network.c -lcmocka -lcurl $(INCLUDE) $(FLAGS) -o build/test_sm
 	./build/test_string_utils
+	./build/test_sm
 
 clean:
 	rm -rf build/*
