@@ -89,7 +89,7 @@ char *sm_find_link_for_song(char *page, song_data *s) {
             memset(link, 0, 128);
 
             for (size_t k = 0; page[k] != '"'; k++) {
-                link[k + 5] = page[k];
+                link[k + 8] = page[k];
             }
 
             link[0] = 'h';
@@ -97,7 +97,7 @@ char *sm_find_link_for_song(char *page, song_data *s) {
             link[3] = 'p';
             link[4] = 's';
             link[5] = ':';
-
+            link[6] = link[7] = '/';
             LOG("New url %s\n", link);
             return link;
         } else {

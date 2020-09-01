@@ -20,13 +20,7 @@ void test_find_link(void MELICUS_UNUSED **state) {
         perror("Error getting file info");
     }
 
-    printf("File size is %ld\n", sb.st_size);
-
     char *file_in_memory = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-    for (off_t i = 0; i < sb.st_size; i++) {
-        printf("%c", file_in_memory[i]);
-    }
 
     song_data data;
     char artist_name[] = "Artist 1";
@@ -36,7 +30,7 @@ void test_find_link(void MELICUS_UNUSED **state) {
 
     char *link = sm_find_link_for_song(file_in_memory, &data);
 
-    printf("%s\n", link);
+    assert_string_equal(link, "https://song link 1");
 
     munmap(file_in_memory, sb.st_size);
     close(fd);

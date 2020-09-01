@@ -10,7 +10,7 @@ int main() {
          12px 0 0 0; border-top: 1px dotted #ddd;\">";
 
     char *lyric = get_lyrics_from_page_string(lyric_html);
-    printf("%s\n", lyric);
+//    printf("%s\n", lyric);
 
     free(lyric);
     return 0;
