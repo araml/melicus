@@ -21,6 +21,7 @@
 
 song_data *current_song;
 string_split *current_song_lyrics;
+string_split *current_song_lyrics_fixed_for_width;
 
 string_split *(* get_lyrics)(song_data *) = sm_get_lyrics;
 
@@ -112,69 +113,17 @@ string_split *split_line(char *line) {
     return s;
 }
 
-int count_used_rows(char *line, __attribute__((unused)) int lyrics_width) {
-    if (!line)
-        return 1;
-
-    int rows = 0;
-    int idx = 0;
-
-    string_split *s = split_line(line);
-    while (true) {
-        if (idx == s->size)
-            break;
-
-        size_t l = length(s->strings[idx]);
-        idx++;
-        // If the word is too big then its going to fill its own lines
-        if (l >= 80) {
-            rows += (l / 80) + (l % 80 ? 1 : 0);
-            continue;
-        }
-
-        l++;
-        /* If the word is not big enough then we can add it to the current line
-         * and try tp keep adding more words to it
-         */
-        while (true) {
-            if (idx == s->size) {
-                rows++;
-                break;
-            }
-            // + 1 for the whitespace between words
-            if (l + length(s->strings[idx]) + 1 < 80) {
-                l = l + length(s->strings[idx]) + 1;
-                idx++;
-            } else {
-                rows++;
-                break;
-            }
-        }
-    }
-
-    destroy_string_split(s);
-
-    return rows;
-}
-
-int calculate_lyrics_height(string_split *lyrics) {
-    int total_rows = 0;
-    for (int i = 0; i < lyrics->size; i++) {
-        if (!lyrics->strings[i]) {
-            total_rows++;
-            continue;
-        } else {
-            total_rows += count_used_rows(lyrics->strings[i], LYRICS_WIDTH);
-        }
-    }
-
-    return total_rows;
-}
-
 typedef struct {
     int next_idx;
     int nrows;
 } xx;
+
+/*
+ * Gets number of rows occupied by a line (divides line by number of chars in a
+ * row)
+ * it also returns the index to the next element in this long line for when its
+ * spliting lines
+ */
 
 xx get_print_pos(string_split *s, __attribute__((unused)) int lyrics_width,
                  int idx) {
@@ -220,7 +169,10 @@ end:
 
 }
 
-void draw_lyrics() {
+void resize_lyrics() {
+    destroy_string_split(current_song_lyrics_fixed_for_width);
+    current_song_lyrics_fixed_for_width = create_string_split();
+
     for (size_t k = 0, i = 0; k < current_song_lyrics->size; k++) {
         if (current_song_lyrics->strings[k]) {
             int idx = 0;
@@ -228,8 +180,7 @@ void draw_lyrics() {
             while (idx != l->size) {
                 xx rs = get_print_pos(l, 80, idx);
                 if (rs.nrows > 1) {
-                    size_t pos = center_position(current_song_lyrics->strings[k]);
-                    mvwaddstr(lyrics_pad, i, pos, l->strings[idx]);
+                    push_to_string_split(current_song_lyrics_fixed_for_width, l->strings[idx]);
                 } else {
                     char buf[81];
                     memset(buf, 0, 80);
@@ -243,20 +194,24 @@ void draw_lyrics() {
                         }
                     }
 
-                    size_t pos = center_position(buf);
-                    mvwaddstr(lyrics_pad, i, pos, buf);
+                    push_to_string_split(current_song_lyrics_fixed_for_width, buf);
                 }
                 idx = rs.next_idx;
                 i += rs.nrows;
             }
 
             destroy_string_split(l);
-
-            //i++;
         } else {
             LOG("Newline \n\n");
             i++;
         }
+    }
+}
+
+void draw_lyrics() {
+    for (size_t i = 0; i < current_song_lyrics_fixed_for_width->size; i++) {
+        size_t pos = center_position(current_song_lyrics_fixed_for_width->strings[i]);
+        mvwaddstr(lyrics_pad, i, pos, current_song_lyrics_fixed_for_width->strings[i]);
     }
 }
 
@@ -270,16 +225,15 @@ void draw_status_bar() {
         mvaddch(height - 2, i, ' ');
     }
 
-
     attroff(COLOR_PAIR(1));
 }
 
 
 void draw_screen() {
     create_pad(&title_pad, 3);
-    int lyrics_height = calculate_lyrics_height(current_song_lyrics);
+    int lyrics_height = current_song_lyrics_fixed_for_width->size;
     create_pad(&lyrics_pad, lyrics_height);
-    LOG("lyric height calc %d\n", calculate_lyrics_height(current_song_lyrics));
+    LOG("lyric height calc %d\n", current_song_lyrics_fixed_for_width->size);
 
     wclear(stdscr);
     mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
@@ -313,6 +267,7 @@ void resize_window() {
     resizeterm(size.ws_row, size.ws_col);
     height = size.ws_row;
     width = size.ws_col;
+    resize_lyrics();
     draw_screen();
 }
 
@@ -368,6 +323,7 @@ int main(int argc, char *argv[]) {
                 destroy_string_split(current_song_lyrics);
             current_song_lyrics = new_lyrics;
             LOG("New song: %s\n", current_song->song_name);
+            resize_lyrics();
             refresh_screen = true;
         } else {
             destroy_song_data(s);

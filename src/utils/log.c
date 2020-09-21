@@ -11,8 +11,7 @@ int fd = 0;
 void log_init() {
 #if defined(DEBUG)
     fd = open("melicus.log", O_CREAT | O_APPEND | O_WRONLY,
-                                 S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
-                                 S_IROTH | S_IWOTH);
+              S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 #endif
 }
 

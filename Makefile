@@ -1,7 +1,7 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef
+FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage
 LIBS = -lcurl -lncursesw
 
 NETWORKING = networking

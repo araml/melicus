@@ -68,6 +68,8 @@ string_split *create_string_split() {
 }
 
 void destroy_string_split(string_split *ss) {
+    if (!ss)
+        return;
     for (size_t i = 0; i < ss->size; i++)
         free(ss->strings[i]);
     free(ss->strings);
