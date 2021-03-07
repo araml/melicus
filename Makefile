@@ -21,11 +21,10 @@ FOLDERS = $(sort $(addprefix $(BUILD)/, $(dir $(SRC))))
 
 BUILD = build
 
-.PHONY: melicus clean tests
+.PHONY: melicus clean tests run_tests 
 all: FLAGS += -DDEBUG
 all: melicus
 
-tests: compile_and_run_tests
 
 release: melicus
 
@@ -39,11 +38,13 @@ melicus: $(FOLDERS) $(OBJS)
 	$(CC) $(OBJS) $(LIBS) $(FLAGS) $(INCLUDE) -o build/melicus
 
 
-compile_and_run_tests:
+tests:
 	$(CC) tests/test_string_utils.c src/utils/string_utils.c -lcmocka $(INCLUDE) $(FLAGS) -o build/test_string_utils
 	$(CC) tests/test_sm.c src/utils/string_utils.c src/pages/sm.c src/lyrics/song_data.c src/utils/log.c src/networking/network.c -lcmocka -lcurl $(INCLUDE) $(FLAGS) -o build/test_sm
-	./build/test_string_utils
+
+run_tests: tests 
 	./build/test_sm
+	./build/test_string_utils
 
 clean:
 	rm -rf build/*
