@@ -314,7 +314,8 @@ int main(int argc, char *argv[]) {
             }
 
             current_song = s;
-
+            
+            // FIXME(aram): if we can't find lyrics show some kind of error message
             string_split *new_lyrics = get_lyrics(s);
 
             LOG("Old song: %s\n", current_song->song_name);

@@ -117,7 +117,8 @@ char *sm_get_lyrics_from_page_string(const char *page_string) {
 
 
     // Tries to match the lyrics inside the html
-    char opening_div[] = "<div class=\"holder lyric-box\">";
+    char opening_div[] = "<div class=\"holder lyric-box\">"; 
+    LOG("page string before find", page_string);
     size_t idx = find_in_string(page_string, opening_div);
     if (idx == (size_t)-1)
         return NULL;
@@ -170,6 +171,11 @@ string_split *sm_get_lyrics(song_data *s) {
     // create song URL
     char *url = sm_make_song_url(s);
     curl_buffer *buf = get_page(url);
+    
+    if (!buf) { 
+        return NULL;
+    }
+
     char *lyric = sm_get_lyrics_from_page_string(buf->buffer);
     // If lyric is null then we didn't find the song so we have to find the link
     // to it in the HTML

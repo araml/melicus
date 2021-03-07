@@ -80,10 +80,26 @@ char *replace_spaces_with_html_spaces(char *url) {
 curl_buffer *get_page(char *url) {
     curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
     memset(buf, 0, sizeof(curl_buffer));
+    
+    size_t tries = 0;
+    while (tries < 5) {
+        CURL *handle = make_handle(url, buf);
+        curl_easy_perform(handle);
+        curl_easy_cleanup(handle);
 
-    CURL *handle = make_handle(url, buf);
-    curl_easy_perform(handle);
-    curl_easy_cleanup(handle);
+        LOG("Get page ptr: %p sz: %zu", buf->buffer, buf->size);
+
+        // error getting the page
+        if (buf->buffer && buf->size != 0) {
+            break;
+        }
+        tries++;
+    }
+
+    if (!buf->buffer || buf->size == 0) { 
+        free(buf);
+        return NULL;
+    }
 
     char *tmp = (char *)realloc(buf->buffer, buf->size + 1);
     if (tmp) {

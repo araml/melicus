@@ -34,6 +34,7 @@ void test_find_link(void MELICUS_UNUSED **state) {
 
     munmap(file_in_memory, sb.st_size);
     close(fd);
+    free(link);
 }
 
 int main () {
