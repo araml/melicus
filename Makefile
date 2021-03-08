@@ -1,7 +1,7 @@
 CC=gcc
 FUZZ_CC=afl-gcc
 
-FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage
+FLAGS = -std=c11 -ggdb -Wall -Wunused-function -Wextra -Wundef --coverage -O0
 LIBS = -lcurl -lncursesw
 
 NETWORKING = networking
@@ -23,7 +23,7 @@ BUILD = build
 
 .PHONY: melicus clean tests run_tests 
 all: FLAGS += -DDEBUG
-all: melicus
+all: melicus tests 
 
 
 release: melicus

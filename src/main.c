@@ -170,6 +170,8 @@ end:
 }
 
 void resize_lyrics() {
+    if (!current_song_lyrics)
+        return;
     destroy_string_split(current_song_lyrics_fixed_for_width);
     current_song_lyrics_fixed_for_width = create_string_split();
 
@@ -209,6 +211,8 @@ void resize_lyrics() {
 }
 
 void draw_lyrics() {
+    if (!current_song_lyrics)
+        return; 
     for (size_t i = 0; i < current_song_lyrics_fixed_for_width->size; i++) {
         size_t pos = center_position(current_song_lyrics_fixed_for_width->strings[i]);
         mvwaddstr(lyrics_pad, i, pos, current_song_lyrics_fixed_for_width->strings[i]);
@@ -231,10 +235,11 @@ void draw_status_bar() {
 
 void draw_screen() {
     create_pad(&title_pad, 3);
-    int lyrics_height = current_song_lyrics_fixed_for_width->size;
-    create_pad(&lyrics_pad, lyrics_height);
-    LOG("lyric height calc %d\n", current_song_lyrics_fixed_for_width->size);
-
+    if (current_song_lyrics_fixed_for_width) { 
+        int lyrics_height = current_song_lyrics_fixed_for_width->size;
+        create_pad(&lyrics_pad, lyrics_height);
+        LOG("lyric height calc %d\n", current_song_lyrics_fixed_for_width->size);
+    }
     wclear(stdscr);
     mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
               current_song->artist_name);
@@ -335,7 +340,7 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        if (current_song_lyrics && refresh_screen) {
+        if (refresh_screen) {
             draw_screen();
         }
 
