@@ -1,9 +1,9 @@
 #define _XOPEN_SOURCE 500
-#include <string_utils.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
+
+#include <string_utils.h>
 
 size_t length(const char *line) {
     size_t len = 0;

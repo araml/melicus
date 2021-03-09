@@ -1,9 +1,12 @@
-#include <sm.h>
 #include <stdlib.h>
-#include <string_utils.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include <sm.h>
 #include <log.h>
 #include <network.h>
-#include <string.h>
+#include <song_data.h>
+#include <string_utils.h>
 
 char *sm_make_song_url(song_data *data) {
     if (!data->song_name)

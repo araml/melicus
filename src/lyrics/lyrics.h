@@ -1,7 +1,7 @@
 #ifndef LYRICS_H
 #define LYRICS_H
 
-#include <unistd.h>
+#include <stddef.h>
 
 #define BLOCKSIZE 4096
 

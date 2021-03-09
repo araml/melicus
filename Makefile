@@ -9,12 +9,13 @@ PLAYER_BACKEND = player_backend
 UTILS = utils
 LYRICS = lyrics
 PAGES = pages
-INCLUDE_DIRS = $(NETWORKING) $(PLAYER_BACKEND) $(UTILS) $(LYRICS) $(PAGES)
+WINDOW = window
+INCLUDE_DIRS = $(NETWORKING) $(PLAYER_BACKEND) $(UTILS) $(LYRICS) $(PAGES) $(WINDOW)
 INCLUDE= $(foreach p, $(INCLUDE_DIRS), -Isrc/$p)
 
 SRC = networking/network.c player_backend/cmus_status.c \
       utils/string_utils.c lyrics/lyrics.c lyrics/song_data.c \
-      utils/log.c pages/sm.c main.c
+      utils/log.c pages/sm.c window/window.c main.c
 
 OBJS = $(addprefix $(BUILD)/, $(addsuffix .o, $(basename $(SRC)))) 
 FOLDERS = $(sort $(addprefix $(BUILD)/, $(dir $(SRC))))

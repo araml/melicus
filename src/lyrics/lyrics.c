@@ -1,7 +1,9 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <lyrics.h>
 #include <string_utils.h>
 

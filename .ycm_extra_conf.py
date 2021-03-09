@@ -83,6 +83,7 @@ flags = [
 '-I', './src/player_backend',
 '-I', './src/utils/',
 '-I', './src/pages',
+'-I', './src/window',
 ]
 
 # Clang automatically sets the '-std=' flag to 'c++14' for MSVC 2015 or later,

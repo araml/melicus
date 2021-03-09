@@ -1,6 +1,5 @@
-#include <song_data.h>
-#include <string.h>
 #include <stdlib.h>
+#include <song_data.h>
 
 void destroy_song_data(song_data *d) {
     free(d->album);

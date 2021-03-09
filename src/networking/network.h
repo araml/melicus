@@ -1,6 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include <stddef.h>
 #include <curl/curl.h>
 
 typedef struct {

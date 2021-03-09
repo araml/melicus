@@ -1,20 +1,18 @@
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE
-#include <ncurses.h>
 #include <sched.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
 #include <stdio.h>
-#include <signal.h>
+#include <curses.h>
 #include <locale.h>
-#include <langinfo.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <sys/ioctl.h>
 
 #include <sm.h>
 #include <log.h>
+#include <window.h>
 #include <lyrics.h>
-#include <network.h>
 #include <song_data.h>
 #include <cmus_status.h>
 #include <string_utils.h>
@@ -37,22 +35,9 @@ bool new_song(song_data *old_song, song_data *new_song) {
 
 }
 
-size_t height, width;
-
-struct winsize get_term_size() {
-    struct winsize size;
-    ioctl(1, TIOCGWINSZ, &size);
-    return size;
-}
-
 WINDOW *lyrics_pad = NULL;
 size_t pad_height, pad_width;
 WINDOW *title_pad = NULL;
-
-void init_window() {
-    //struct winsize size = get_term_size();
-    //main_pad = newpad(
-}
 
 void create_pad(WINDOW **w, int height) {
     if (*w) {
@@ -220,18 +205,6 @@ void draw_lyrics() {
 }
 
 
-void draw_status_bar() {
-    attron(COLOR_PAIR(1));
-    mvaddch(height - 2, 0, ' ');
-    char status[] = "Status";
-    mvaddstr(height - 2, 1, status);
-    for (int i = sizeof(status); i < width; i++) {
-        mvaddch(height - 2, i, ' ');
-    }
-
-    attroff(COLOR_PAIR(1));
-}
-
 
 void draw_screen() {
     create_pad(&title_pad, 3);
@@ -264,8 +237,6 @@ void draw_screen() {
     //refresh();
 }
 
-bool window_size_changed = false;
-
 void resize_window() {
     window_size_changed = false;
     struct winsize size = get_term_size();
@@ -276,10 +247,6 @@ void resize_window() {
     draw_screen();
 }
 
-void sig_winch(__attribute__((unused)) int irq) {
-    window_size_changed = true;
-}
-
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
@@ -287,25 +254,7 @@ int main(int argc, char *argv[]) {
     current_song_lyrics = NULL;
     //string_split *l = NULL;
     log_init();
-
-    struct winsize max;
-    ioctl(1, TIOCGWINSZ, &max);
-    LOG("Screen size %d %d\n", max.ws_row, max.ws_col);
-    height = max.ws_row;
-    width = max.ws_col;
-    setlocale(LC_ALL, "");
-    initscr();
-    nodelay(stdscr, true);
-    curs_set(0);
-    noecho();
-    cbreak();
-    signal(SIGWINCH, sig_winch);
-
-    start_color();
-    use_default_colors();
-    init_pair(1, COLOR_WHITE, COLOR_BLUE);
-    init_pair(2, COLOR_BLUE, -1);
-    init_pair(3, COLOR_BLUE, COLOR_BLUE);
+    window_init();
 
     while (true) {
         song_data *s = get_current_song();

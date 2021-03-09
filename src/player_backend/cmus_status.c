@@ -1,13 +1,9 @@
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 #include <string.h>
-#include <fcntl.h>
 #include <stdbool.h>
 #include <sys/wait.h>
-#include <stdio.h>
-#include <sys/types.h>
 
-#include <log.h>
 #include <cmus_status.h>
 #include <song_data.h>
 #include <string_utils.h>
