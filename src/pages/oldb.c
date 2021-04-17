@@ -133,5 +133,7 @@ string_split *oldb_get_lyrics(const song_data *s) {
     curl_buffer *buf = get_page(url);
     free(url);
 
-    return oldb_clean_lyrics(buf->buffer);
+    string_split *lyrics = oldb_clean_lyrics(buf->buffer);
+    destroy_curl_buffer(buf);
+    return lyrics;
 }
