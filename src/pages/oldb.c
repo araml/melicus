@@ -70,7 +70,8 @@ string_split *oldb_clean_lyrics(char *lyrics) {
         } else if (lyrics[i] == '<') { // skip any other html tag 
             for (; i < ending; i++)
                 if (lyrics[i] == '>')
-                    continue;
+                    break;
+            continue; // awful
         }
 
         add_char_to_string(&line, lyrics[i]);
