@@ -43,7 +43,6 @@ size_t codepoints(const char *line) {
     return codepoints;
 }
 
-
 size_t get_size_until_next_smybol(const char *s, size_t index, char c) {
     size_t result = 0;
     for(size_t i = index; i < length(s) && s[i] != c; i++) {
@@ -77,7 +76,6 @@ int match(const char *lyrics, const char *prefix, size_t s_length) {
 
     return 1;
 } 
-
 
 // TODO: this is cmus specific, maybe move there?
 void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
@@ -247,8 +245,6 @@ int add_char_to_string(char **s, char c) {
 
     return 0;
 }
-
-
 
 char uppercase_char(char c) { 
    if (c >=  65 && c <= 90)
