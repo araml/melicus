@@ -20,7 +20,10 @@ char *uppercase_string(const char *lowercased) {
     
     for (size_t i = 0; i < size; i++) { 
         if (token && uppercased[i] != ' ' && uppercased[i] != '\0') {
-            uppercased[i] = uppercase_char(lowercased[i]);
+            char c = uppercase_char(lowercased[i]);
+            if (!c) 
+                return NULL; // error non-ascii (OLDB only)
+            uppercased[i] = c;
             token = 0;
         } else { 
             uppercased[i] = lowercased[i];
@@ -78,14 +81,14 @@ string_split *oldb_clean_lyrics(char *lyrics) {
     return sv;
 }
 
-
 char* make_oldb_url(const song_data *s) { 
     const char prefix[] = "https://lyrics.github.io/db/";
 
     char *url = NULL;
     add_to_string(&url, prefix);
 
-    // /db/X where X = first letter of artist name
+    // url schema prefix/db/X/Artist Name/Album Name/Song Name
+    // All strings should be Upper Cased
     char first_letter = uppercase_char(s->artist_name[0]);
     // open lyrics db doesn't support non-ascii artists :/
     if (!first_letter) 
