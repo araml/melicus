@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <song_data.h>
-#include <string_utils.h>
+#include <string_split.h>
 
 int realloc_wrapper(char **ptr, size_t size);
 int get_line(int fd, char **sline);

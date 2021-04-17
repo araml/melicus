@@ -2,7 +2,7 @@
 #define SM_H
 /* songmeanings.net crawler */
 #include <song_data.h>
-#include <string_utils.h>
+#include <string_split.h>
 
 char *sm_make_song_url(song_data *data);
 char *sm_find_link_for_song(char *page, song_data *s);

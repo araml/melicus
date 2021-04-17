@@ -4,51 +4,6 @@
 #include <network.h>
 #include <string_utils.h>
 
-static char uppercase_char(char c) { 
-   if (c >=  65 && c <= 90)
-       return c;
-   else if (c >= 97 && c <= 122)
-       return c - 32;
-   return 0;
-}
-
-char *uppercase_string(const char *lowercased) { 
-    size_t size = length(lowercased) + 1;
-    char *uppercased = malloc(size);
-    memset(uppercased, 0, size);
-    int token = 1;
-    
-    for (size_t i = 0; i < size; i++) { 
-        if (token && uppercased[i] != ' ' && uppercased[i] != '\0') {
-            char c = uppercase_char(lowercased[i]);
-            if (!c) 
-                return NULL; // error non-ascii (OLDB only)
-            uppercased[i] = c;
-            token = 0;
-        } else { 
-            uppercased[i] = lowercased[i];
-        }
-
-        if (uppercased[i] == ' ') {
-            token = 1;
-        }
-    }
-
-    return uppercased;
-}
-
-int match(const char *lyrics, const char *prefix, size_t s_length) { 
-    size_t prefix_length = length(prefix);
-    if (s_length < prefix_length)
-        return 0;
-
-    for (size_t i = 0; i < prefix_length; i++) {
-        if (prefix[i] != lyrics[i])
-            return 0;
-    }
-
-    return 1;
-} 
 
 string_split *oldb_clean_lyrics(char *lyrics) {
     string_split *sv = create_string_split();

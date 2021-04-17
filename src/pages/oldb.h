@@ -6,7 +6,7 @@
  */
 
 #include <song_data.h>
-#include <string_utils.h>
+#include <string_split.h>
 
 string_split *oldb_get_lyrics(const song_data *s);
 
