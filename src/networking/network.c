@@ -66,7 +66,7 @@ char *replace_spaces_with_html_spaces(char *url) {
         if (url[i] == ' ') {
             tmp_url[k] = '%';
             tmp_url[k + 1] = '2';
-            tmp_url[k + 2] = '2';
+            tmp_url[k + 2] = '0';
             k += 3;
         } else {
             tmp_url[k] = url[i];
