@@ -40,7 +40,6 @@ int match(const char *lyrics, const char *prefix, size_t s_length) {
         return 0;
 
     for (size_t i = 0; i < prefix_length; i++) {
-        // CMUS_remote q data starts after the tag word, maybe regex it?
         if (prefix[i] != lyrics[i])
             return 0;
     }
