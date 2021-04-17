@@ -10,6 +10,7 @@
 #include <sys/ioctl.h>
 
 #include <sm.h>
+#include <oldb.h>
 #include <log.h>
 #include <window.h>
 #include <lyrics.h>
@@ -21,7 +22,7 @@ song_data *current_song;
 string_split *current_song_lyrics;
 string_split *current_song_lyrics_fixed_for_width;
 
-string_split *(* get_lyrics)(song_data *) = sm_get_lyrics;
+string_split *(* get_lyrics)(const song_data *) = oldb_get_lyrics;//sm_get_lyrics;
 
 string_split *no_lyrics() {
     return NULL;
