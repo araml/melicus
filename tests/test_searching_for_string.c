@@ -6,6 +6,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <sm.h>
+#include <string_utils.h>
 
 void test_search_sm_lyric_box(void MELICUS_UNUSED **state) { 
     char lyric_html[] =

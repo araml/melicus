@@ -4,6 +4,7 @@
 #include <cmocka.h>
 #include <stdlib.h>
 #include <string_utils.h>
+#include <string_split.h>
 
 static void test_append_to_string(void MELICUS_UNUSED **state) {
     char *test_str = NULL;

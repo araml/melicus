@@ -53,29 +53,6 @@ size_t get_size_until_next_smybol(const char *s, size_t index, char c) {
     return result;
 }
 
-/* splits a string by the character ' ' (generic later)
- * reserves memory for both the string split and every string inside of it
- * used_size is the number of strings allocated while reserved size is the
- * size of the array pointing to each string
- * ALL memory should be free'd with destroy_split_string
- */
-string_split *create_string_split() {
-    string_split *r = (string_split *)malloc(sizeof(string_split));
-    r->strings = NULL;
-    r->size = 0;
-    r->reserved_size = 0;
-    return r;
-}
-
-void destroy_string_split(string_split *ss) {
-    if (!ss)
-        return;
-    for (size_t i = 0; i < ss->size; i++)
-        free(ss->strings[i]);
-    free(ss->strings);
-    free(ss);
-}
-
 int check_prefix(const char *prefix, const char *s) {
     size_t prefix_length = length(prefix);
     size_t s_length = length(s);
@@ -87,6 +64,20 @@ int check_prefix(const char *prefix, const char *s) {
 
     return 1;
 }
+
+int match(const char *lyrics, const char *prefix, size_t s_length) { 
+    size_t prefix_length = length(prefix);
+    if (s_length < prefix_length)
+        return 0;
+
+    for (size_t i = 0; i < prefix_length; i++) {
+        if (prefix[i] != lyrics[i])
+            return 0;
+    }
+
+    return 1;
+} 
+
 
 // TODO: this is cmus specific, maybe move there?
 void if_substring_fill(char **to_fill, const char *prefix, const char *subs) {
@@ -257,30 +248,37 @@ int add_char_to_string(char **s, char c) {
     return 0;
 }
 
-int push_to_string_split(string_split *ss, const char *line) {
-    if (!line)
-        return -1;
 
-    if (ss->reserved_size == 0) {
-        ss->strings = (char **)malloc(sizeof(char *));
-        ss->reserved_size = 1;
-    } else if (ss->size == ss->reserved_size) {
-        char **tmp = (char **)realloc(ss->strings, sizeof(char *) *
-                                      (ss->reserved_size *= 2));
-        if (tmp) {
-            ss->strings = tmp;
-        } else {
-            return -1;
+
+char uppercase_char(char c) { 
+   if (c >=  65 && c <= 90)
+       return c;
+   else if (c >= 97 && c <= 122)
+       return c - 32;
+   return 0;
+}
+
+char *uppercase_string(const char *lowercased) { 
+    size_t size = length(lowercased) + 1;
+    char *uppercased = malloc(size);
+    memset(uppercased, 0, size);
+    int token = 1;
+    
+    for (size_t i = 0; i < size; i++) { 
+        if (token && uppercased[i] != ' ' && uppercased[i] != '\0') {
+            char c = uppercase_char(lowercased[i]);
+            if (!c) 
+                return NULL; // error non-ascii (OLDB only)
+            uppercased[i] = c;
+            token = 0;
+        } else { 
+            uppercased[i] = lowercased[i];
+        }
+
+        if (uppercased[i] == ' ') {
+            token = 1;
         }
     }
 
-    ss->strings[ss->size] = (char *)malloc(length(line) + 1);
-    memset(ss->strings[ss->size], '\0', length(line) + 1);
-    for (size_t i = 0; i < length(line); i++) {
-        ss->strings[ss->size][i] = line[i];
-    }
-
-    ss->size++;
-
-    return 0;
+    return uppercased;
 }
