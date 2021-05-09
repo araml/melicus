@@ -37,7 +37,7 @@ string_split_t oldb_clean_lyrics(char *lyrics) {
     return sv;
 }
 
-char* make_oldb_url(const song_data *s) { 
+char* make_oldb_url(const song_data_t *s) { 
     const char prefix[] = "https://lyrics.github.io/db/";
 
     char *url = NULL;
@@ -83,16 +83,16 @@ char* make_oldb_url(const song_data *s) {
     return url;
 }
 
-string_split_t oldb_get_lyrics(const song_data *s) {
+string_split_t oldb_get_lyrics(const song_data_t *s) {
     string_split_t string_split = create_string_split();
     if (!s || !s->artist_name || !s->album || !s->song_name) 
         return string_split;
         
     char *url = make_oldb_url(s);
-    curl_buffer *buf = get_page(url);
+    curl_buffer_t buf = get_page(url);
     free(url);
 
-    string_split_t lyrics = oldb_clean_lyrics(buf->buffer);
-    destroy_curl_buffer(buf);
+    string_split_t lyrics = oldb_clean_lyrics(buf.buffer);
+    destroy_curl_buffer(&buf);
     return lyrics;
 }

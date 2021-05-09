@@ -8,7 +8,7 @@
 #include <song_data.h>
 #include <string_utils.h>
 
-char *sm_make_song_url(song_data *data) {
+char *sm_make_song_url(song_data_t *data) {
     if (!data->song_name)
         return NULL;
 
@@ -41,7 +41,7 @@ char *sm_make_song_url(song_data *data) {
 
 #define ERR_FIND ((size_t) - 1)
 
-char *sm_find_link_for_song(char *page, song_data *s) {
+char *sm_find_link_for_song(char *page, song_data_t *s) {
     char song_table[] = "songs table";
     char title[] = "title";
     char song_href[] = "href=\"";
@@ -169,38 +169,38 @@ string_split_t sm_clean_lyrics(char *lyrics) {
     return sv;
 }
 
-string_split_t sm_get_lyrics(song_data *s) {
+string_split_t sm_get_lyrics(song_data_t *s) {
     // create song URL
     char *url = sm_make_song_url(s);
-    curl_buffer *buf = get_page(url);
+    curl_buffer_t buf = get_page(url);
     
-    if (!buf) { 
+    if (!buf.is_valid) { 
         return create_invalid_string_split();
     }
 
-    char *lyric = sm_get_lyrics_from_page_string(buf->buffer);
+    char *lyric = sm_get_lyrics_from_page_string(buf.buffer);
     // If lyric is null then we didn't find the song so we have to find the link
     // to it in the HTML
     if (!lyric) {
-        char *link = sm_find_link_for_song(buf->buffer, s);
+        char *link = sm_find_link_for_song(buf.buffer, s);
         free(lyric);
-        destroy_curl_buffer(buf);
+        destroy_curl_buffer(&buf);
         buf = get_page(link);
-        if (!buf) { 
+        if (!buf.is_valid) { 
             return create_invalid_string_split();
         }
-        lyric = sm_get_lyrics_from_page_string(buf->buffer);
+        lyric = sm_get_lyrics_from_page_string(buf.buffer);
         free(link);
-    }
+    } 
 
-    string_split_t lyrics;
+    string_split_t lyrics = create_invalid_string_split();
     if (lyric) {
         lyrics = sm_clean_lyrics(lyric);
     }
 
-    free(lyric);
-    destroy_curl_buffer(buf);
     free(url);
+    free(lyric);
+    destroy_curl_buffer(&buf);
     return lyrics;
 }
 

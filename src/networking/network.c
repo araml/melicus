@@ -4,14 +4,13 @@
 #include <string_utils.h>
 #include <log.h>
 
-void destroy_curl_buffer(curl_buffer *buf) {
+void destroy_curl_buffer(curl_buffer_t *buf) {
     free(buf->buffer);
-    free(buf);
 }
 
 size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
     size_t size = sz * nmemb; // sz is the width of the byte, nmemb is the # of bytes
-    curl_buffer *cbuf = (curl_buffer *) context;
+    curl_buffer_t *cbuf = (curl_buffer_t *) context;
     char *tmp = (char *)realloc(cbuf->buffer, cbuf->size + size);
     if (!tmp) {
         // Bad realloc
@@ -28,7 +27,7 @@ size_t grow_buffer(void *contents, size_t sz, size_t nmemb, void *context) {
 }
 
 
-CURL *make_handle(char *url, curl_buffer *cbuf) {
+CURL *make_handle(char *url, curl_buffer_t *cbuf) {
     CURL *handle = curl_easy_init();
 
     // Curl boilerplate.
@@ -77,35 +76,38 @@ char *replace_spaces_with_html_spaces(char *url) {
     return tmp_url;
 }
 
-curl_buffer *get_page(char *url) {
-    curl_buffer *buf = (curl_buffer *)malloc(sizeof(curl_buffer));
-    memset(buf, 0, sizeof(curl_buffer));
-    
+curl_buffer_t get_page(char *url) {
+    curl_buffer_t buf = {
+        .size   = 0,
+        .buffer = NULL,
+        .is_valid = true,
+    };
+
     size_t tries = 0;
     while (tries < 5) {
-        CURL *handle = make_handle(url, buf);
+        CURL *handle = make_handle(url, &buf);
         curl_easy_perform(handle);
         curl_easy_cleanup(handle);
 
-        LOG("Get page ptr: %p sz: %zu", buf->buffer, buf->size);
+        LOG("Get page ptr: %p sz: %zu", buf.buffer, buf.size);
 
         // error getting the page
-        if (buf->buffer && buf->size != 0) {
+        if (buf.buffer && buf.size != 0) {
             break;
         }
         tries++;
     }
 
-    if (!buf->buffer || buf->size == 0) { 
-        free(buf);
-        return NULL;
+    if (!buf.buffer || buf.size == 0) { 
+        buf.is_valid = false;
+        return buf;
     }
 
-    char *tmp = (char *)realloc(buf->buffer, buf->size + 1);
+    char *tmp = (char *)realloc(buf.buffer, buf.size + 1);
     if (tmp) {
-        buf->buffer = tmp;
-        buf->size += 1;
+        buf.buffer = tmp;
+        buf.size += 1;
     }
-    buf->buffer[buf->size - 1] = '\0';
+    buf.buffer[buf.size - 1] = '\0';
     return buf;
 }

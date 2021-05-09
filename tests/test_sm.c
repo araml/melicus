@@ -22,11 +22,10 @@ void test_find_link(void MELICUS_UNUSED **state) {
 
     char *file_in_memory = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-    song_data data;
-    char artist_name[] = "Artist 1";
-    data.artist_name = artist_name;
-    char song_name[] = "Song";
-    data.song_name = song_name;
+    song_data_t data = { 
+        .artist_name = "Artist 1",
+        .song_name   = "Song",
+    };
 
     char *link = sm_find_link_for_song(file_in_memory, &data);
 

@@ -7,8 +7,8 @@
 
 int realloc_wrapper(char **ptr, size_t size);
 int get_line(int fd, char **sline);
-song_data *load_song_data_cmus(const char *path);
+song_data_t load_song_data_cmus(const char *path);
 string_split_t get_cmus_status();
-song_data *get_current_song();
+song_data_t get_current_song();
 
 #endif // CMUS_STATUS_H

@@ -18,17 +18,17 @@
 #include <cmus_status.h>
 #include <string_utils.h>
 
-song_data *current_song;
+song_data_t current_song;
 string_split_t current_song_lyrics;
 string_split_t current_song_lyrics_fixed_for_width;
 
-string_split_t (* get_lyrics)(const song_data *) = oldb_get_lyrics;//sm_get_lyrics;
+string_split_t (* get_lyrics)(const song_data_t *) = oldb_get_lyrics;//sm_get_lyrics;
 
 string_split_t no_lyrics() {
     return create_invalid_string_split();
 }
 
-bool new_song(song_data *old_song, song_data *new_song) {
+bool new_song(song_data_t *old_song, song_data_t *new_song) {
     // Asume no two album names are equal
     bool song_eq = string_cmp(old_song->song_name, new_song->song_name);
     bool artist_eq = string_cmp(old_song->artist_name, new_song->artist_name);
@@ -215,10 +215,10 @@ void draw_screen() {
         LOG("lyric height calc %d\n", current_song_lyrics_fixed_for_width.size);
     }
     wclear(stdscr);
-    mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
-              current_song->artist_name);
-    mvwaddstr(title_pad, 1, center_position(current_song->album), current_song->album);
-    mvwaddstr(title_pad, 2, center_position(current_song->song_name), current_song->song_name);
+    mvwaddstr(title_pad, 0, center_position(current_song.artist_name),
+              current_song.artist_name);
+    mvwaddstr(title_pad, 1, center_position(current_song.album), current_song.album);
+    mvwaddstr(title_pad, 2, center_position(current_song.song_name), current_song.song_name);
 
     draw_lyrics();
     draw_status_bar();
@@ -251,38 +251,38 @@ void resize_window() {
 int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
-    current_song = NULL;
+    current_song = create_invalid_song_data();
     current_song_lyrics = create_invalid_string_split();
     //string_split *l = NULL;
     log_init();
     window_init();
 
     while (true) {
-        song_data *s = get_current_song();
-        if (!s) {
+        song_data_t s = get_current_song();
+        if (!s.is_valid) {
             continue;
         }
 
-        if (!current_song || new_song(current_song, s)) {
-            if (current_song) {
-                destroy_song_data(current_song);
+        if (!current_song.is_valid || new_song(&current_song, &s)) {
+            if (current_song.is_valid) {
+                destroy_song_data(&current_song);
             }
 
             current_song = s;
             
             // FIXME(aram): if we can't find lyrics show some kind of error message
-            string_split_t new_lyrics = get_lyrics(s);
+            string_split_t new_lyrics = get_lyrics(&s);
 
-            LOG("Old song: %s\n", current_song->song_name);
+            LOG("Old song: %s\n", current_song.song_name);
 
             if (current_song_lyrics.is_valid)
                 destroy_string_split(&current_song_lyrics);
             current_song_lyrics = new_lyrics;
-            LOG("New song: %s\n", current_song->song_name);
+            LOG("New song: %s\n", current_song.song_name);
             resize_lyrics();
             refresh_screen = true;
         } else {
-            destroy_song_data(s);
+            destroy_song_data(&s);
             sched_yield();
         }
 
@@ -303,7 +303,7 @@ int main(int argc, char *argv[]) {
     }
 
     endwin();
-    destroy_song_data(current_song);
+    destroy_song_data(&current_song);
     destroy_string_split(&current_song_lyrics);
     return 0;
 }

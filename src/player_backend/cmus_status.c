@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 
-#include <cmus_status.h>
 #include <song_data.h>
+#include <cmus_status.h>
 #include <string_utils.h>
 
 
@@ -64,21 +64,20 @@ string_split_t get_cmus_status() {
     }
 }
 
-song_data *get_current_song() {
+song_data_t get_current_song() {
     string_split_t ss = get_cmus_status();
     if (ss.size == 0) {
-        return NULL;
+        return create_invalid_song_data();
     }
 
-    song_data *s = (song_data *)malloc(sizeof(song_data));
-    memset(s, 0, sizeof(song_data));
+    song_data_t s = create_song_data();
 
     for (size_t i = 0; i < ss.size; i++) {
-        if_substring_fill(&(s->album), album, ss.strings[i]);
-        if_substring_fill(&(s->song_name), song_title, ss.strings[i]);
-        if_substring_fill(&(s->artist_name), artist, ss.strings[i]);
+        if_substring_fill(&(s.album), album, ss.strings[i]);
+        if_substring_fill(&(s.song_name), song_title, ss.strings[i]);
+        if_substring_fill(&(s.artist_name), artist, ss.strings[i]);
 
-        if (s->artist_name && s->song_name && s->album)
+        if (s.artist_name && s.song_name && s.album)
             break;
     }
 
