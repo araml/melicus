@@ -27,7 +27,6 @@ BUILD = build
 all: FLAGS += -DDEBUG
 all: melicus tests 
 
-
 release: melicus
 
 $(BUILD)/%.o: %.c
@@ -51,6 +50,7 @@ run_tests: tests
 
 clean:
 	rm -rf build/*
+	rm -f *.gcda *.gcno
 
 vpath %.c src
 

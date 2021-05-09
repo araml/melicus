@@ -8,6 +8,6 @@
 #include <song_data.h>
 #include <string_split.h>
 
-string_split *oldb_get_lyrics(const song_data *s);
+string_split_t oldb_get_lyrics(const song_data *s);
 
 #endif // OPEN_LYRICS_DATABASE_H

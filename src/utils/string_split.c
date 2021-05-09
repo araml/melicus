@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string_split.h>
+#include <string_utils.h>
 
 /* splits a string by the character ' ' (generic later)
  * reserves memory for both the string split and every string inside of it
@@ -8,24 +9,30 @@
  * size of the array pointing to each string
  * ALL memory should be free'd with destroy_split_string
  */
-string_split *create_string_split() {
-    string_split *r = (string_split *)malloc(sizeof(string_split));
-    r->strings = NULL;
-    r->size = 0;
-    r->reserved_size = 0;
-    return r;
+string_split_t create_string_split() {
+    string_split_t string_split = { 
+        .strings = NULL,
+        .size = 0,
+        .reserved_size = 0,
+        .is_valid = true,
+    };
+    return string_split;
 }
 
-void destroy_string_split(string_split *ss) {
-    if (!ss)
-        return;
+string_split_t create_invalid_string_split() {
+    string_split_t string_split = { 
+        .is_valid = false,
+    };
+    return string_split;
+}
+
+void destroy_string_split(string_split_t *ss) {
     for (size_t i = 0; i < ss->size; i++)
         free(ss->strings[i]);
     free(ss->strings);
-    free(ss);
 }
 
-int push_to_string_split(string_split *ss, const char *line) {
+int push_to_string_split(string_split_t *ss, const char *line) {
     if (!line)
         return -1;
 

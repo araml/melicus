@@ -148,8 +148,8 @@ char *sm_get_lyrics_from_page_string(const char *page_string) {
     return lyrics;
 }
 
-string_split *sm_clean_lyrics(char *lyrics) {
-    string_split *sv = create_string_split();
+string_split_t sm_clean_lyrics(char *lyrics) {
+    string_split_t sv = create_string_split();
     char *line = NULL;
     for (size_t i = 0; i < length(lyrics); i++) {
         // </br>
@@ -158,7 +158,7 @@ string_split *sm_clean_lyrics(char *lyrics) {
         if (lyrics[i]     == '<' && lyrics[i + 1] == 'b' &&
             lyrics[i + 2] == 'r' && lyrics[i + 3] == '/' && lyrics[i + 4] == '>') {
             i += 4;
-            line ? push_to_string_split(sv, line) : push_to_string_split(sv, "\n");
+            line ? push_to_string_split(&sv, line) : push_to_string_split(&sv, "\n");
             free(line);
             line = NULL;
             continue;
@@ -169,13 +169,13 @@ string_split *sm_clean_lyrics(char *lyrics) {
     return sv;
 }
 
-string_split *sm_get_lyrics(song_data *s) {
+string_split_t sm_get_lyrics(song_data *s) {
     // create song URL
     char *url = sm_make_song_url(s);
     curl_buffer *buf = get_page(url);
     
     if (!buf) { 
-        return NULL;
+        return create_invalid_string_split();
     }
 
     char *lyric = sm_get_lyrics_from_page_string(buf->buffer);
@@ -187,13 +187,13 @@ string_split *sm_get_lyrics(song_data *s) {
         destroy_curl_buffer(buf);
         buf = get_page(link);
         if (!buf) { 
-            return NULL;
+            return create_invalid_string_split();
         }
         lyric = sm_get_lyrics_from_page_string(buf->buffer);
         free(link);
     }
 
-    string_split *lyrics = NULL;
+    string_split_t lyrics;
     if (lyric) {
         lyrics = sm_clean_lyrics(lyric);
     }

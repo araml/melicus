@@ -58,25 +58,25 @@ static void test_find_in_string(void MELICUS_UNUSED **state) {
 }
 
 static void test_string_split(void MELICUS_UNUSED **state) {
-    string_split *ss = create_string_split();
-    assert_ptr_equal(ss->strings, NULL);
-    assert_int_equal(ss->size, 0);
-    assert_int_equal(ss->reserved_size, 0);
+    string_split_t ss = create_string_split();
+    assert_ptr_equal(ss.strings, NULL);
+    assert_int_equal(ss.size, 0);
+    assert_int_equal(ss.reserved_size, 0);
 
-    push_to_string_split(ss, "Hello");
-    assert_ptr_not_equal(ss->strings, NULL);
-    assert_int_equal(ss->size, 1);
-    assert_int_equal(ss->reserved_size, 1);
-    push_to_string_split(ss, "World");
-    assert_ptr_not_equal(ss->strings, NULL);
-    assert_int_equal(ss->size, 2);
-    assert_int_equal(ss->reserved_size, 2);
-    push_to_string_split(ss, "!");
-    assert_ptr_not_equal(ss->strings, NULL);
-    assert_int_equal(ss->size, 3);
-    assert_int_equal(ss->reserved_size, 4);
+    push_to_string_split(&ss, "Hello");
+    assert_ptr_not_equal(ss.strings, NULL);
+    assert_int_equal(ss.size, 1);
+    assert_int_equal(ss.reserved_size, 1);
+    push_to_string_split(&ss, "World");
+    assert_ptr_not_equal(ss.strings, NULL);
+    assert_int_equal(ss.size, 2);
+    assert_int_equal(ss.reserved_size, 2);
+    push_to_string_split(&ss, "!");
+    assert_ptr_not_equal(ss.strings, NULL);
+    assert_int_equal(ss.size, 3);
+    assert_int_equal(ss.reserved_size, 4);
 
-    destroy_string_split(ss);
+    destroy_string_split(&ss);
 }
 
 int main() {

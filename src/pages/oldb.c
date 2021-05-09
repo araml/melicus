@@ -5,8 +5,8 @@
 #include <string_utils.h>
 
 
-string_split *oldb_clean_lyrics(char *lyrics) {
-    string_split *sv = create_string_split();
+string_split_t oldb_clean_lyrics(char *lyrics) {
+    string_split_t sv = create_string_split();
     const char opening_div[] = "<div id=\"lyrics\">";
     const char ending_string[] = "Song name";
     size_t idx = find_in_string(lyrics, opening_div);
@@ -20,7 +20,7 @@ string_split *oldb_clean_lyrics(char *lyrics) {
     for (size_t i = idx; i < ending; i++) {
         if (lyrics[i] == '<' && match(lyrics + i, br, ending - i)) {
             i += 4;
-            line ? push_to_string_split(sv, line) : push_to_string_split(sv, "\n");
+            line ? push_to_string_split(&sv, line) : push_to_string_split(&sv, "\n");
             free(line);
             line = NULL;
             continue;
@@ -33,6 +33,7 @@ string_split *oldb_clean_lyrics(char *lyrics) {
 
         add_char_to_string(&line, lyrics[i]);
     }
+
     return sv;
 }
 
@@ -82,15 +83,16 @@ char* make_oldb_url(const song_data *s) {
     return url;
 }
 
-string_split *oldb_get_lyrics(const song_data *s) {
+string_split_t oldb_get_lyrics(const song_data *s) {
+    string_split_t string_split = create_string_split();
     if (!s || !s->artist_name || !s->album || !s->song_name) 
-        return NULL;
+        return string_split;
         
     char *url = make_oldb_url(s);
     curl_buffer *buf = get_page(url);
     free(url);
 
-    string_split *lyrics = oldb_clean_lyrics(buf->buffer);
+    string_split_t lyrics = oldb_clean_lyrics(buf->buffer);
     destroy_curl_buffer(buf);
     return lyrics;
 }

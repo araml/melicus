@@ -19,13 +19,13 @@
 #include <string_utils.h>
 
 song_data *current_song;
-string_split *current_song_lyrics;
-string_split *current_song_lyrics_fixed_for_width;
+string_split_t current_song_lyrics;
+string_split_t current_song_lyrics_fixed_for_width;
 
-string_split *(* get_lyrics)(const song_data *) = oldb_get_lyrics;//sm_get_lyrics;
+string_split_t (* get_lyrics)(const song_data *) = oldb_get_lyrics;//sm_get_lyrics;
 
-string_split *no_lyrics() {
-    return NULL;
+string_split_t no_lyrics() {
+    return create_invalid_string_split();
 }
 
 bool new_song(song_data *old_song, song_data *new_song) {
@@ -78,12 +78,12 @@ int next_word_size(char *line) {
     return sz;
 }
 
-string_split *split_line(char *line) {
-    string_split *s = create_string_split();
+string_split_t split_line(char *line) {
+    string_split_t s = create_string_split();
     char *word = NULL;
     for (size_t i = 0; line[i] != '\0'; i++) {
         if (line[i] == ' ') {
-            push_to_string_split(s, word);
+            push_to_string_split(&s, word);
             free(word);
             word = NULL;
         } else {
@@ -92,7 +92,7 @@ string_split *split_line(char *line) {
     }
 
     if (word) {
-        push_to_string_split(s, word);
+        push_to_string_split(&s, word);
         free(word);
     }
 
@@ -111,7 +111,7 @@ typedef struct {
  * spliting lines
  */
 
-xx get_print_pos(string_split *s, __attribute__((unused)) int lyrics_width,
+xx get_print_pos(string_split_t *s, __attribute__((unused)) int lyrics_width,
                  int idx) {
     int rows = 0;
     xx ps;
@@ -156,39 +156,39 @@ end:
 }
 
 void resize_lyrics() {
-    if (!current_song_lyrics)
+    if (!current_song_lyrics.is_valid)
         return;
-    destroy_string_split(current_song_lyrics_fixed_for_width);
+    destroy_string_split(&current_song_lyrics_fixed_for_width);
     current_song_lyrics_fixed_for_width = create_string_split();
 
-    for (size_t k = 0, i = 0; k < current_song_lyrics->size; k++) {
-        if (current_song_lyrics->strings[k]) {
+    for (size_t k = 0, i = 0; k < current_song_lyrics.size; k++) {
+        if (current_song_lyrics.strings[k]) {
             int idx = 0;
-            string_split *l = split_line(current_song_lyrics->strings[k]);
-            while (idx != l->size) {
-                xx rs = get_print_pos(l, 80, idx);
+            string_split_t l = split_line(current_song_lyrics.strings[k]);
+            while (idx != l.size) {
+                xx rs = get_print_pos(&l, 80, idx);
                 if (rs.nrows > 1) {
-                    push_to_string_split(current_song_lyrics_fixed_for_width, l->strings[idx]);
+                    push_to_string_split(&current_song_lyrics_fixed_for_width, l.strings[idx]);
                 } else {
                     char buf[81];
                     memset(buf, 0, 80);
                     int buf_idx = 0;
                     for (int p = idx; p < rs.next_idx; p++) {
-                        memcpy(buf + buf_idx, l->strings[p], length(l->strings[p]));
-                        buf_idx += length(l->strings[p]);
+                        memcpy(buf + buf_idx, l.strings[p], length(l.strings[p]));
+                        buf_idx += length(l.strings[p]);
                         if (buf_idx != 80) {
                             buf[buf_idx] = ' ';
                             buf_idx++;
                         }
                     }
 
-                    push_to_string_split(current_song_lyrics_fixed_for_width, buf);
+                    push_to_string_split(&current_song_lyrics_fixed_for_width, buf);
                 }
                 idx = rs.next_idx;
                 i += rs.nrows;
             }
 
-            destroy_string_split(l);
+            destroy_string_split(&l);
         } else {
             LOG("Newline \n\n");
             i++;
@@ -197,11 +197,11 @@ void resize_lyrics() {
 }
 
 void draw_lyrics() {
-    if (!current_song_lyrics)
+    if (!current_song_lyrics.is_valid)
         return; 
-    for (size_t i = 0; i < current_song_lyrics_fixed_for_width->size; i++) {
-        size_t pos = center_position(current_song_lyrics_fixed_for_width->strings[i]);
-        mvwaddstr(lyrics_pad, i, pos, current_song_lyrics_fixed_for_width->strings[i]);
+    for (size_t i = 0; i < current_song_lyrics_fixed_for_width.size; i++) {
+        size_t pos = center_position(current_song_lyrics_fixed_for_width.strings[i]);
+        mvwaddstr(lyrics_pad, i, pos, current_song_lyrics_fixed_for_width.strings[i]);
     }
 }
 
@@ -209,10 +209,10 @@ void draw_lyrics() {
 
 void draw_screen() {
     create_pad(&title_pad, 3);
-    if (current_song_lyrics_fixed_for_width) { 
-        int lyrics_height = current_song_lyrics_fixed_for_width->size;
+    if (current_song_lyrics_fixed_for_width.is_valid) { 
+        int lyrics_height = current_song_lyrics_fixed_for_width.size;
         create_pad(&lyrics_pad, lyrics_height);
-        LOG("lyric height calc %d\n", current_song_lyrics_fixed_for_width->size);
+        LOG("lyric height calc %d\n", current_song_lyrics_fixed_for_width.size);
     }
     wclear(stdscr);
     mvwaddstr(title_pad, 0, center_position(current_song->artist_name),
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
     (void) argc; (void)argv;
     // Initialize current_song data
     current_song = NULL;
-    current_song_lyrics = NULL;
+    current_song_lyrics = create_invalid_string_split();
     //string_split *l = NULL;
     log_init();
     window_init();
@@ -271,12 +271,12 @@ int main(int argc, char *argv[]) {
             current_song = s;
             
             // FIXME(aram): if we can't find lyrics show some kind of error message
-            string_split *new_lyrics = get_lyrics(s);
+            string_split_t new_lyrics = get_lyrics(s);
 
             LOG("Old song: %s\n", current_song->song_name);
 
-            if (current_song_lyrics)
-                destroy_string_split(current_song_lyrics);
+            if (current_song_lyrics.is_valid)
+                destroy_string_split(&current_song_lyrics);
             current_song_lyrics = new_lyrics;
             LOG("New song: %s\n", current_song->song_name);
             resize_lyrics();
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
 
     endwin();
     destroy_song_data(current_song);
-    destroy_string_split(current_song_lyrics);
+    destroy_string_split(&current_song_lyrics);
     return 0;
 }
 

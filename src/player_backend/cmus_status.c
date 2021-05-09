@@ -15,7 +15,7 @@ const char artist[] = "artist";
 const char album[] = "album";
 const char song_title[] = "title";
 
-string_split* get_cmus_status() {
+string_split_t get_cmus_status() {
     int pipe_fd[2]; // Read from 0 write to 1
     int pipe_err[2]; // Pipe to read stderr
     pipe(pipe_fd);
@@ -31,21 +31,21 @@ string_split* get_cmus_status() {
         char bin[] = "/usr/bin/cmus-remote";
         char *args[3] = {"cmus-remote", "-Q", NULL};
         execvp(bin, args);
-        return NULL;
+        return create_invalid_string_split();
     } else {
         close(pipe_fd[1]);
         close(pipe_err[1]);
         char *line = NULL;
 
-        string_split *ss = create_string_split();
+        string_split_t ss = create_string_split();
 
         while (get_line(pipe_fd[0], &line) != 0) {
-            push_to_string_split(ss, line);
+            push_to_string_split(&ss, line);
             free(line);
         }
 
         // We didn't read nothing from stdout cmus is closed
-        if (ss->size == 0) {
+        if (ss.size == 0) {
             while (true) {
                 ssize_t err  = get_line(pipe_err[0], &line);
                 if (err == 0 || err == -1) {
@@ -65,23 +65,23 @@ string_split* get_cmus_status() {
 }
 
 song_data *get_current_song() {
-    string_split *ss = get_cmus_status();
-    if (ss->size == 0) {
+    string_split_t ss = get_cmus_status();
+    if (ss.size == 0) {
         return NULL;
     }
 
     song_data *s = (song_data *)malloc(sizeof(song_data));
     memset(s, 0, sizeof(song_data));
 
-    for (size_t i = 0; i < ss->size; i++) {
-        if_substring_fill(&(s->album), album, ss->strings[i]);
-        if_substring_fill(&(s->song_name), song_title, ss->strings[i]);
-        if_substring_fill(&(s->artist_name), artist, ss->strings[i]);
+    for (size_t i = 0; i < ss.size; i++) {
+        if_substring_fill(&(s->album), album, ss.strings[i]);
+        if_substring_fill(&(s->song_name), song_title, ss.strings[i]);
+        if_substring_fill(&(s->artist_name), artist, ss.strings[i]);
 
         if (s->artist_name && s->song_name && s->album)
             break;
     }
 
-    destroy_string_split(ss);
+    destroy_string_split(&ss);
     return s;
 }
